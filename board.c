@@ -3,7 +3,7 @@
 #include "board.h"
 
 //the number of different types of ships
-#define NDIFSHIPS
+#define NDIFSHIPS 5
 
 //  Each player gets 5 ships, a destroyer of size 2, a submarine of size 3, a cruiser of size 3, 
 //  a battleship of size 4, and an aircraft carrier of size 5.
@@ -53,3 +53,61 @@ bool checkBounds (struct board board, char* ship, struct shipLocation proposal){
     proposal.sunk=false;
     return true;
 }
+
+
+//this returns TRUE if there is an overlap on the board
+
+//it also updates board to occupy cells where proposal is
+bool checkOverlap(struct board board, struct shipLocation proposal){
+
+    //initialize an array with info from board
+    cell_t array[10][10] = board;
+
+    //start coords and info of ship
+    int x = proposal.startx;
+    int y = proposal.stary;
+    shipType_t ship = proposal.shipType;
+    enum Orientation direction = proposal.orientation;
+
+    //horizontal
+    if (direction == HORIZONTAL){
+        //check if proposed locations are already occupied
+        for(int i = 0; i < proposal.shipType.size; i++){
+            if (array[x][y + i].occupied){
+                return TRUE;
+            }
+            //change cell status 
+            array[x][y + i].occupied = TRUE;
+            array[x][y + i].ship = ship;
+        }
+    }
+
+    //vertical
+    if (direction == VERTICAL){
+        //same shit as above 
+        for(int i = 0; i < proposal.shipType.size; i++){
+            if (array[x + i][y].occupied){
+                return TRUE;
+            }
+            //change cell status
+            array[x + i][y].occupied = TRUE;
+            array[x + i][y].ship = ship;
+        }
+    }
+
+    //update the board and return false if everything is good
+    board = array;
+    return FALSE;
+}
+
+
+/* Whats next?
+
+* check if ship location is valid, shouldnt overlap with other ships
+    check overlap function that looks to see if one cell has multiple ships in it 
+    after checking bouds we want to actually place ships on board
+* users place ships on board, save ship location
+* set of seperate ships for each user 
+* update board after guesses
+
+*/

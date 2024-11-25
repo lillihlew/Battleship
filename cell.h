@@ -13,6 +13,7 @@ typedef struct cell{
     bool occupied;
     bool guessed;
     bool hit;
-} cell;
+    shipType_t ship;
+} cell_t;
 
 bool isOccupied(cell c);

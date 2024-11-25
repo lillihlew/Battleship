@@ -7,7 +7,7 @@
 
 typedef struct board{
     cell array[NROWS][NCOLS];
-}board;
+}board_t;
 
 typedef struct shipLocation{
     shipType shipType;
@@ -15,7 +15,7 @@ typedef struct shipLocation{
     int starty;
     Orientation orientation;
     bool sunk;
-}ship;
+}shipLocation_t;
 
 enum Orientation {
   HORIZONTAL,
@@ -25,7 +25,7 @@ enum Orientation {
 typedef struct shipType {
   char* name;
   int size;
-};
+} shipType_t;
 
 
 bool checkBounds (struct board board, char* ship, struct shipLocation proposal);
