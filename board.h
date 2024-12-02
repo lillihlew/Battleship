@@ -12,8 +12,8 @@ typedef struct shipType {
 
 //  Each player gets 5 ships, a destroyer of size 2, a submarine of size 3, a cruiser of size 3, 
 //  a battleship of size 4, and an aircraft carrier of size 5.
-#define SHIPLIBRARY {{"Destroyer", 2},    {"Submarine", 3},    {"Cruiser", 3},    {"Battleship", 4},    {"Aircraft Carrier", 5}}
-const shipType_t shipArray[NDIFSHIPS] = SHIPLIBRARY;
+
+const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cruiser", 3} ,{"Battleship", 4} ,{"Aircraft Carrier", 5}};
 
 typedef struct cell{
     // coordinate coordinate;
@@ -32,7 +32,8 @@ typedef struct board{
 
 enum Orientation {
   HORIZONTAL,
-  VERTICAL
+  VERTICAL,
+  INVALID
 };
 
 typedef struct shipLocation{

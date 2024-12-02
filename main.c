@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include "board.h"
 
+// const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cruiser", 3} ,{"Battleship", 4} ,{"Aircraft Carrier", 5}};
+
 // Function to allow a player to place ships
 void placeShips(board_t *board);
 

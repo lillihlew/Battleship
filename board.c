@@ -14,12 +14,7 @@ bool checkBounds (struct board board, char* ship, struct shipLocation proposal){
         //save index with correct ship to capture the length
         if(strcmp(ship, shipArray[i].name) == 0){
             index = i;
-        }//if
-    }//for
-
-    //check error
-    if(index == NDIFSHIPS+1) {
-        printf("Invalid ship name\n");
+        }//ifcell_t array[NROp name\n");
         return false;
     }//if
 
@@ -90,6 +85,105 @@ bool checkOverlap(board_t * board, struct shipLocation proposal){
     return false;
 }
 
+enum Orientation validOrt(enum Orientation bigO){
+    bool lit = true;
+
+     while (lit){
+            printf("Please input orientation (V/H): ");
+            char orientation[50];
+            fgets(orientation, sizeof(orientation), stdin);
+            enum Orientation ORT = INVALID;
+
+            if (orientation[0] == 'H'){
+                ORT = HORIZONTAL;
+                lit = false;
+            }
+            else if(orientation[0] == 'V') {
+                ORT = VERTICAL;
+                lit = false;
+            } else {
+                printf("Wrong\n");
+            }
+            printf("\n");
+            bigO = ORT;
+        }
+
+
+    return bigO;
+}
+
+char* validCoords(char * yay){
+    bool supa = true;
+
+     while (supa){
+        printf("Please input coordinates (ex: A,1)");
+        char coords[3];
+        fgets(coords, sizeof(coords), stdin);
+
+        if (strlen(coords) == 3){
+            char letter = coords[0];
+            char number = coords[2];
+            bool validL = false;
+            bool validN = false;
+            char possibleL = 'A';
+            int possibleN = 1;
+            for (int i = 0; i < 10; i++){
+                if (letter==possibleL) {
+                    validL = true;
+                    break;
+                }
+                possibleL++;
+            }
+            for (int i = 0; i < 10; i++){
+                char array[2] = {number, '\0'};
+                if (atoi(array)==possibleN){
+                    validN = true;
+                    break;
+                }
+                possibleN++;
+            }
+            if(validL && validN){
+                supa=false;
+                yay[0] = possibleN;
+                yay[1] = possibleL;
+                return yay;
+            }else{
+                printf("Invalid input. Try again.\n");
+            }
+        }
+    }
+    return NULL;
+}
+
+/*Places ships*/
+board_t makeBoard(){
+    board_t board;
+    shipLocation_t proposal;
+
+    //loop through the diff types of ships
+    for (int i = 0; i < NDIFSHIPS; i++){ 
+        shipType_t current = shipArray[i]; 
+        enum Orientation bigO = INVALID;
+        
+        printf("Current Ship: %s\nShip Length: %d\n", current.name, current.size);
+        bigO = validOrt(bigO);
+        char coords[2];
+        validCoords(coords);
+        
+        if(coords == NULL) perror("SOMETHING WENT WroNG");
+
+        proposal.orientation = bigO;
+        char arrayX[2] = {coords[0], '\0'};
+        char arrayY[2] = {coords[1], '\0'};
+        proposal.startx = atoi(arrayX);
+        proposal.starty = atoi(arrayY)-64;
+        if(!(checkBounds(board, current.name, proposal) && !checkOverlap(&board, proposal))) printf("Houston we have a big fucking problem with our proposed locash\n");
+        //display the ship on the board
+
+    }
+
+    return board;
+}
 
 /* Whats next?
 
@@ -101,3 +195,59 @@ bool checkOverlap(board_t * board, struct shipLocation proposal){
 * update board after guesses
 
 */
+
+
+// while (lit){
+        //     printf("Please input orientation (V/H): ");
+        //     char orientation[50];
+        //     fgets(orientation, sizeof(orientation), stdin);
+        //     enum Orientation ORT = NULL;
+
+        //     if (strcmp(orientation, 'H') == 0){
+        //         ORT = HORIZONTAL;
+        //         lit = false;
+        //     }
+        //     else if(strcmp(orientation, 'V') == 0) {
+        //         ORT = VERTICAL;
+        //         lit = false;
+        //     } else {
+        //         printf("Wrong\n");
+        //     }
+        //     println();
+        //     bigO = ORT;
+        // }
+
+        
+        // while (supa){
+        //     printf("Please input coordinates (ex: A,1)");
+        //     char coords[3];
+        //     fgets(coords, sizeof(coords), stdin);
+
+        //     if (strlen(coords) == 3){
+        //         char letter = coords[0];
+        //         char number = coords[2];
+        //         bool validL = false;
+        //         bool validN = false;
+        //         char possibleL = 'A';
+        //         int possibleN = 1;
+        //         for (int i = 0; i < 10; i++){
+        //             if (letter==possibleL) {
+        //                 validL = true;
+        //                 break;
+        //             }
+        //             possibleL++;
+        //         }
+        //         for (int i = 0; i < 10; i++){
+        //             if (atoi(number)==possibleN){
+        //                 validN = true;
+        //                 break;
+        //             }
+        //             possibleN++;
+        //         }
+        //         if(validL && validN){
+        //             supa=false;
+        //             startX = possibleN;
+        //             startY = possibleL;
+        //         }
+        //     }
+        // }
