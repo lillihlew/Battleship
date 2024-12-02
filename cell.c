@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
-#include "cell.h"
+#include <stdio.h>
+#include <string.h>
+#include "board.h"
 
 //Regard this as you would an ancient relic
 // typedef struct cell{
@@ -13,17 +15,17 @@
 #define MISS false
 
 //check if cell is occupied, true if yes false if not
-bool isOccupied(cell c){
+bool isOccupied(cell_t c){
     return c.occupied;
 } 
 
 //check if cell has already been guessed, true if yes false if not
-bool isGuessed(cell c){
+bool isGuessed(cell_t c){
     return c.guessed;
 }
 
 //check if cell has been hit, true if yes false if not
-bool hasBeenHit(cell c){
+bool hasBeenHit(cell_t c){
     return c.hit;
 }
 
@@ -34,7 +36,7 @@ bool hasBeenHit(cell c){
  * Updates the hit field to be either hit (true) or missed (false)
  * Updates the guessed field to be true
  */
-bool guess(cell c){
+bool guess(cell_t c){
     //possibly modify this to guard against cell we've already guessed
 
     //update guessed field

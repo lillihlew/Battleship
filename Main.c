@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "cell.h"
 #include "board.h"
 
 // Function to allow a player to place ships

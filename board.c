@@ -1,19 +1,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
 #include "board.h"
-
-//the number of different types of ships
-#define NDIFSHIPS 5
-
-//  Each player gets 5 ships, a destroyer of size 2, a submarine of size 3, a cruiser of size 3, 
-//  a battleship of size 4, and an aircraft carrier of size 5.
-struct shipType shipArray[NDIFSHIPS]={
-    {"Destroyer", 2},
-    {"Submarine", 3},
-    {"Cruiser", 3},
-    {"Battleship", 4},
-    {"Aircraft Carrier", 5}
-};
 
 //when passed in, proposal should have an unitialized shipType and it will be initialized within this if bounds are valid
 bool checkBounds (struct board board, char* ship, struct shipLocation proposal){
@@ -58,14 +47,15 @@ bool checkBounds (struct board board, char* ship, struct shipLocation proposal){
 //this returns TRUE if there is an overlap on the board
 
 //it also updates board to occupy cells where proposal is
-bool checkOverlap(struct board board, struct shipLocation proposal){
+bool checkOverlap(board_t * board, struct shipLocation proposal){
 
     //initialize an array with info from board
-    cell_t array[10][10] = board;
+    cell_t array[10][10];
+    memcpy(array, board, sizeof(cell_t)*100);
 
     //start coords and info of ship
     int x = proposal.startx;
-    int y = proposal.stary;
+    int y = proposal.starty;
     shipType_t ship = proposal.shipType;
     enum Orientation direction = proposal.orientation;
 
@@ -74,10 +64,10 @@ bool checkOverlap(struct board board, struct shipLocation proposal){
         //check if proposed locations are already occupied
         for(int i = 0; i < proposal.shipType.size; i++){
             if (array[x][y + i].occupied){
-                return TRUE;
+                return true;
             }
             //change cell status 
-            array[x][y + i].occupied = TRUE;
+            array[x][y + i].occupied = true;
             array[x][y + i].ship = ship;
         }
     }
@@ -87,17 +77,17 @@ bool checkOverlap(struct board board, struct shipLocation proposal){
         //same shit as above 
         for(int i = 0; i < proposal.shipType.size; i++){
             if (array[x + i][y].occupied){
-                return TRUE;
+                return true;
             }
             //change cell status
-            array[x + i][y].occupied = TRUE;
+            array[x + i][y].occupied = true;
             array[x + i][y].ship = ship;
         }
     }
 
     //update the board and return false if everything is good
-    board = array;
-    return FALSE;
+    memcpy(board, array, sizeof(cell_t)*100);
+    return false;
 }
 
 
