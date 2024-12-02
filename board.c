@@ -185,6 +185,89 @@ board_t makeBoard(){
     return board;
 }
 
+// Function that updates the board based on the player's guess
+void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk) {
+    *isHit = false;     // Initialize hit status as false
+    *isSunk = false;    // Initialize sunk status as false
+
+    // Validate coordinates to ensure they are within the bounds
+    if (x < 0 || x >= NCOLS || y < 0 || y >= NROWS) {
+        printf("Invalid coordinates.\n");
+        return;
+    }
+
+    // Get the cell at the specified coordinates
+    cell_t *cell = &board->array[y][x]; // Access the guessed cell
+
+    // Check if the cell has already been guessed
+    if (cell->guessed) {
+        printf("This cell has already been guessed");
+        return;
+    }
+
+    // Mark the cell as guessed
+    cell->guessed = true;
+
+    // Check if the cell is occupied by a ship
+    if (cell->occupied) {
+        *isHit = true;
+        cell->hit = true;
+
+        // Check if the entire ship has been sunk
+        shipType_t *ship = &cell->ship;
+        bool allCellsHit = true;
+
+        // Scan the board for any remaining parts of this ship
+        for (int i = 0; i < NROWS; i++) {
+            for (int j = 0; j < NCOLS; j++) {
+                if (board->array[i][j].occupied && board->array[i][j].ship.name == ship->name
+                && !board->array[i][j].hit) {
+                    allCellsHit = false;
+                    break;
+                }
+            } 
+            if (!allCellsHit) break;
+        }
+
+        // If all parts of the ship are hit, it is sunk
+        if (allCellsHit) {
+            *isSunk = true;
+            printf("You sunk a %s", ship->name);
+        }
+    } else {
+        // If the cell is not occupied, it's a miss
+        printf("Miss!\n");
+    }
+}
+
+// Function that iterates through all cells on the board, checking for any unsunk ship parts.
+//      If any cell is occupied by a ship and not marked as hit, the game is not over
+bool checkVictory(board_t *board) {
+    // Iterate through ever cell on the board
+    for (int i = 0; i < NROWS; i++) {
+        for (int j = 0; j < NCOLS; j++) {
+            cell_t *cell = &board->array[i][j];
+            //If any ship cell is not hit, the player has not lost yet
+            if (cell->occupied && !cell->hit) {
+                return false;       // Found an unsunk ship part
+            }
+        }
+    }
+    return true;    // All ship parts are sunk
+}
+
+// Function that initializes a players game board
+void initBoard(board_t *board) {
+    // Iterate through each row and column
+    for (int i = 0; i < NROWS; i++) {
+        for (int j = 0; j < NCOLS; j++) {
+            // Access each cell and reset its properties
+            board->array[i][j].occupied = false;    // No ship places
+            board->array[i][j].guessed = false;     // Not guessed yet
+            board->array[i][j].hit = false;     // Not hit yet
+        }
+    }
+}
 /* Whats next?
 
 * check if ship location is valid, shouldnt overlap with other ships
