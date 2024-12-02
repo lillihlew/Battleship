@@ -48,3 +48,13 @@ typedef struct shipLocation{
 
 
 bool checkBounds (struct board board, char* ship, struct shipLocation proposal);
+
+// Function to handle the logic of processing an attack on the opponent's board
+void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk);
+
+// Function that iterates through all cells on the board, checking for any unsunk ship parts.
+//      If any cell is occupied by a ship and not marked as hit, the game is not over
+bool checkVictory(board_t *board);
+
+// Function that initializes a players game board
+void initBoard(board_t *board); 
