@@ -149,7 +149,93 @@ void handlePlayer1(int server_fd) {
 
 // Function to handle Player 2's logic
 void handlePlayer2(const char *server_ip) {
+    // Connect to Player 1
+    int client_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (client_fd == -1) {
+        perror("Socket creation failed.");
+        exit(EXIT_FAILURE);
+    }
 
+    struct sockaddr_in server_addr = {0};
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT);
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0) {
+        perror("Invalid address");
+        close(client_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    if (connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        perror("Connection failed");
+        close(client_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Connected to Player 1!\n");
+
+    // Initialize game boards for both players
+    board_t player2Board, player1Board;
+    initBoard(&player2Board);
+    initBoard(&player1Board);
+
+    // Ship Placement for Player 2
+    printf("Player 2: Place your ships.\n");
+    makeBoard(&player2Board);
+    send(client_fd, &player2Board, sizeof(board_t), 0); // Send Player 2's board to Player 1
+
+    // Receive Player 1's Board
+    printf("Waiting for Player 1 to place ships...\n");
+    recv(client_fd, &player1Board, sizeof(board_t), 0);
+
+    // Main Game Loop
+    bool gameRunning = true;
+    char buffer[BUFFER_SIZE] = {0};
+    while (gameRunning) {
+        // Player 1's turn
+        printf("Waiting for Player 1's move...\n");
+        int x, y;
+        recv(client_fd, &x, sizeof(int), 0);
+        recv(client_fd, &y, sizeof(int), 0);
+
+        // Update Player 2's board based on Player 1's attack
+        bool hit, sunk;
+        updateBoardAfterGuess(&player2Board, x, y, &hit, &sunk);
+
+        // Check if Player 1 won
+        if (checkVictory(&player2Board)) {
+            snprintf(buffer, BUFFER_SIZE, "Player 1 Wins!");
+            send(client_fd, buffer, strlen(buffer), 0);
+            gameRunning = false;
+        } else {
+            snprintf(buffer, BUFFER_SIZE, hit ? "Hit!" : "Miss!");
+            send(client_fd, buffer, strlen(buffer), 0);
+        }
+
+        // Player 2's turn
+        printf("Player 2: Your turn. Enter coordinates to attack (e.g., A 1).\n");
+        char xChar;
+        int yInput;
+        if (!getCoordinates(&xChar, &yInput)) continue;     // Get and validate input
+
+        x = xChar - ((xChar >= 'A' && xChar <= 'J') ? 'A' : 'a');       // Convert letter to index
+        y = yInput - 1;         // Convert Y-coordinate to index
+
+        // Send attack coordinates to Player 1
+        send(client_fd, &x, sizeof(int), 0);
+        send(client_fd, &y, sizeof(int), 0);
+
+        // Recieve result of attack
+        recv(client_fd, buffer, BUFFER_SIZE, 0);
+        printf("%s\n", buffer);
+
+        // Check for victory
+        if (strcmp(buffer, "Player 2 Wins!") == 0) {
+            gameRunning = false;
+            break;
+        }
+    }
+
+    close(client_fd);   // Close the connection to Player 1
 }
 
 // Function to get valid coordinates from the user
