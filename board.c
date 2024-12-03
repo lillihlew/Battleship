@@ -181,7 +181,7 @@ char * validCoords(char * yay){
         }
     }
     return NULL;
-}
+} 
 
 /**
  * makeBoard loops through all of the ships and places them on the board. 
@@ -212,6 +212,7 @@ board_t makeBoard(){
         if(!(checkBounds(board, current.name, proposal) && !checkOverlap(&board, proposal))) printf("Houston we have a big fucking problem with our proposed locash\n");
         //display the ship on the board
 
+        //give user option to start over
         printf("If you would like to reset your board, you may now type in 'R'. Otherwise, hit enter.\n");
 
         char input[BUFFERSIZE];
