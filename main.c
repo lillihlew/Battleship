@@ -90,7 +90,7 @@ void handlePlayer1(int server_fd) {
 
     // Ship Placement for Player 1
     printf("Player 1: Place your ships.\n");
-    placeShips(&player1Board);
+    makeBoard(&player1Board);
     send(client_fd, &player1Board, sizeof(board_t), 0); // Send Player 1's board to Player 2
 
     // Receive Player 2's Board

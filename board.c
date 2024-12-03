@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "board.h"
 
+const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cruiser", 3} ,{"Battleship", 4} ,{"Aircraft Carrier", 5}};
+
 //when passed in, proposal should have an unitialized shipType and it will be initialized within this if bounds are valid
 bool checkBounds (struct board board, char* ship, struct shipLocation proposal){
     //set as higher than number of ships to catch an error, this value should definitely change in the loop

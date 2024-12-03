@@ -13,7 +13,7 @@ typedef struct shipType {
 //  Each player gets 5 ships, a destroyer of size 2, a submarine of size 3, a cruiser of size 3, 
 //  a battleship of size 4, and an aircraft carrier of size 5.
 
-const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cruiser", 3} ,{"Battleship", 4} ,{"Aircraft Carrier", 5}};
+extern const shipType_t shipArray[];
 
 typedef struct cell{
     // coordinate coordinate;
@@ -58,3 +58,13 @@ bool checkVictory(board_t *board);
 
 // Function that initializes a players game board
 void initBoard(board_t *board); 
+
+
+bool checkOverlap(board_t * board, struct shipLocation proposal);
+
+enum Orientation validOrt(enum Orientation bigO);
+
+char* validCoords(char * yay);
+
+board_t makeBoard();
+
