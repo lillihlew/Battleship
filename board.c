@@ -167,10 +167,11 @@ board_t makeBoard(){
         
         printf("Current Ship: %s\nShip Length: %d\n", current.name, current.size);
         bigO = validOrt(bigO);
-        char coords[2];
+        char coords[2] = {'\0', '\0'};
+        char empty[2] = {'\0', '\0'};
         validCoords(coords);
         
-        if(coords == NULL) perror("SOMETHING WENT WroNG");
+        if(strcmp(coords, empty) == 0) perror("SOMETHING WENT WroNG");
 
         proposal.orientation = bigO;
         char arrayX[2] = {coords[0], '\0'};

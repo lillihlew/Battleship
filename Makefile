@@ -6,7 +6,7 @@ all: battleship
 clean:
 	rm -f battleship
 
-battleship: board.c board.h cell.c main.c
+battleship: cell.c board.c board.h main.c
 	$(CC) $(CFLAGS) -o battleship board.c cell.c main.c
 
 zip:
