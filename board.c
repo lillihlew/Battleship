@@ -114,7 +114,8 @@ enum Orientation validOrt(){
         } else if(orientation[0] == 'V') {
             ORT = VERTICAL;
         } else {
-            printf("Invalid orientation, try again. Please enter 'V' for vertical or 'H' for horizontal.\n");
+            printf("Invalid orientation, try again. Please enter 'V' for vertical or 'H' for horizontal.\n"); 
+            
         }//ifelseifelse
     }//while
 
@@ -132,10 +133,10 @@ char * validCoords(char * yay){
     //use this bool to control the while loop to loop until both coordinate values are valid
     bool supa = true;
 
-     while (supa){
+    //give user instructions and store their input into coords[]
+    printf("Please input coordinates for the start point of your ship (ex: A,1): ");
 
-        //give user instructions and store their input into coords[]
-        printf("Please input coordinates for the start point of your ship (ex: A,1): ");
+     while (supa){
         char coords[BUFFERSIZE];
         fgets(coords, sizeof(coords), stdin);
 
@@ -178,7 +179,7 @@ char * validCoords(char * yay){
             }else{
                 printf("Invalid input. Try again. Remember, the format is LETTER,NUMBER with a capital letter, a comma between the letter and number, and no spaces!\n");
             }
-        }
+        } else printf("Invalid input. Try again. Remember, the format is LETTER,NUMBER with a capital letter, a comma between the letter and number, and no spaces!\n");
     }
     return NULL;
 } 
@@ -187,22 +188,29 @@ char * validCoords(char * yay){
  * makeBoard loops through all of the ships and places them on the board. 
  */
 board_t makeBoard(){
+    //make a new board and a proposal ship location
     board_t board;
     shipLocation_t proposal;
 
-
-    //loop through the diff types of ships
+    //loop through the diff types of ships using the ship array
     for (int i = 0; i < NDIFSHIPS; i++){ 
+
+        //save ship we're on as current
         shipType_t current = shipArray[i]; 
-        enum Orientation bigO = INVALID;
         
+        //give user info on which ship we're using 
         printf("Current Ship: %s\nShip Length: %d\n", current.name, current.size);
+
+        //get user to give us their orientation for the ship
+        enum Orientation bigO = INVALID;
         bigO = validOrt(bigO); //this will not return until it's a valid orientation.
+        if(bigO==INVALID) perror("SOMETHING WENT WroNG WITH ORIENTATION");
+
+        //get user to give us their starting coordinate for the ship
         char coords[2] = {'\0', '\0'};
         char empty[2] = {'\0', '\0'};
         validCoords(coords);
-        
-        if(strcmp(coords, empty) == 0) perror("SOMETHING WENT WroNG");
+        if(strcmp(coords, empty) == 0) perror("SOMETHING WENT WroNG WITH COORDINATES");
 
         proposal.orientation = bigO;
         char arrayX[2] = {coords[0], '\0'};
