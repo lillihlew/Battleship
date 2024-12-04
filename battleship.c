@@ -8,23 +8,26 @@
 #include "gameMessage.h"
 #include "socket.h"
 
+// Function prototypes for server and client roles
 void run_server(unsigned short port);
 void run_client(char *server_name, unsigned short port);
 
 int main(int argc, char *argv[]) {
+    // Validate command-line arguments
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <role> [<server_name> <port>]\n", argv[0]);
         fprintf(stderr, "Role: server or client\n");
         exit(EXIT_FAILURE);
     }
 
+    // Check if the user wants to start as a server
     if (strcmp(argv[1], "server") == 0) {
-        // Server role
         unsigned short port = (argc == 3) ? atoi(argv[2]) : 8080; // Default port: 8080
         printf("Starting server on port %u...\n", port);
         run_server(port);
-    } else if (strcmp(argv[1], "client") == 0) {
-        // Client role
+    } 
+    // Check if the user wants to start as a client
+    else if (strcmp(argv[1], "client") == 0) {
         if (argc < 4) {
             fprintf(stderr, "Usage for client: %s client <server_name> <port>\n", argv[0]);
             exit(EXIT_FAILURE);
@@ -33,7 +36,9 @@ int main(int argc, char *argv[]) {
         unsigned short port = atoi(argv[3]);
         printf("Connecting to server %s on port %u...\n", server_name, port);
         run_client(server_name, port);
-    } else {
+    } 
+    // Invalid role provided
+    else {
         fprintf(stderr, "Invalid role. Use 'server' or 'client'.\n");
         exit(EXIT_FAILURE);
     }
@@ -41,13 +46,16 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+// Server-side implementation
 void run_server(unsigned short port) {
+    // Create and bind the server socket
     int server_socket_fd = server_socket_open(&port);
     if (server_socket_fd == -1) {
         perror("Failed to open server socket");
         exit(EXIT_FAILURE);
     }
 
+    // Start listening for incoming connections
     printf("Server listening on port %u\n", port);
 
     if (listen(server_socket_fd, 1) == -1) {
@@ -55,6 +63,7 @@ void run_server(unsigned short port) {
         exit(EXIT_FAILURE);
     }
 
+    // Accept a client connection
     int client_socket_fd = server_socket_accept(server_socket_fd);
     if (client_socket_fd == -1) {
         perror("Failed to accept client connection");
@@ -63,15 +72,17 @@ void run_server(unsigned short port) {
 
     printf("Client connected!\n");
 
-    // Game logic for Player 1
+    // Initialize game boards for both players
     board_t player1_board, player2_board;
     initBoard(&player1_board);
     initBoard(&player2_board);
 
+    // Player 1 place ships
     printf("Player 1: Place your ships.\n");
     makeBoard(&player1_board);
-    send_message(client_socket_fd, "READY");
+    send_message(client_socket_fd, "READY");    // Notify the client that the server is ready
 
+    // Wait for the client to be ready
     char *message = receive_message(client_socket_fd);
     if (strcmp(message, "READY") != 0) {
         printf("Client not ready. Exiting.\n");
@@ -91,8 +102,8 @@ void run_server(unsigned short port) {
         // Player 1's turn
         printf("Player 1: Enter attack coordinates (e.g., A,1): ");
         validCoords(attack_coords);
-        y = attack_coords[0] - 'A';
-        x = attack_coords[1] - '1';
+        y = attack_coords[0] - 'A';     // Convert letter to row index
+        x = attack_coords[1] - '1';     // Convert number to column index
 
         // Send attack to Player 2
         snprintf(attack_coords, sizeof(attack_coords), "%c,%c", attack_coords[0], attack_coords[1]);
@@ -118,7 +129,7 @@ void run_server(unsigned short port) {
         x = attack_coords[1] - '1';
         free(enemy_attack);
 
-        // Update Player 1's board
+        // Update Player 1's board based on Player 2's attack
         bool hit, sunk;
         updateBoardAfterGuess(&player1_board, x, y, &hit, &sunk);
 
@@ -136,11 +147,14 @@ void run_server(unsigned short port) {
         }
     }
 
+    // Clear sockets
     close(client_socket_fd);
     close(server_socket_fd);
 }
 
+// Client-side implementation
 void run_client(char *server_name, unsigned short port) {
+    // Connect to the server
     int socket_fd = socket_connect(server_name, port);
     if (socket_fd == -1) {
         perror("Failed to connect to server");
@@ -149,15 +163,17 @@ void run_client(char *server_name, unsigned short port) {
 
     printf("Connected to server!\n");
 
-    // Game logic for Player 2
+    // Initialize game boards for both players
     board_t player2_board, player1_board;
     initBoard(&player2_board);
     initBoard(&player1_board);
 
+    // Player 2 place ships
     printf("Player 2: Place your ships.\n");
     makeBoard(&player2_board);
-    send_message(socket_fd, "READY");
+    send_message(socket_fd, "READY");       // Notify the server that the client is ready
 
+    // Wait for the server to be ready
     char *message = receive_message(socket_fd);
     if (strcmp(message, "READY") != 0) {
         printf("Server not ready. Exiting.\n");
@@ -181,7 +197,7 @@ void run_client(char *server_name, unsigned short port) {
         x = attack_coords[1] - '1';
         free(enemy_attack);
 
-        // Update Player 2's board
+        // Update Player 2's board based on Player 1's attack
         bool hit, sunk;
         updateBoardAfterGuess(&player2_board, x, y, &hit, &sunk);
 
@@ -221,5 +237,6 @@ void run_client(char *server_name, unsigned short port) {
         }
     }
 
+    // Close the connection
     close(socket_fd);
 }
