@@ -47,7 +47,7 @@ typedef struct shipLocation{
 
 
 
-bool checkBounds (struct board board, char* ship, struct shipLocation proposal);
+bool checkBounds (struct board board, struct shipLocation proposal);
 
 // Function to handle the logic of processing an attack on the opponent's board
 void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk);
@@ -62,7 +62,7 @@ void initBoard(board_t *board);
 
 bool checkOverlap(board_t * board, struct shipLocation proposal);
 
-enum Orientation validOrt(enum Orientation bigO);
+enum Orientation validOrt();
 
 char* validCoords(char * yay);
 

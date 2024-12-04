@@ -8,35 +8,29 @@ const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cr
 #define BUFFERSIZE 10
 
 //when passed in, proposal should have an unitialized shipType and it will be initialized within this if bounds are valid
-bool checkBounds (struct board board, char* ship, struct shipLocation proposal){
-    //set as higher than number of ships to catch an error, this value should definitely change in the loop
-    int index = NDIFSHIPS+1; 
+bool checkBounds (struct board board, struct shipLocation proposal){
+    
+    //save size of ship
+    int size = proposal.shipType.size;
 
-    //loop through ship array
-    for(int i = 0; i < NDIFSHIPS; i++){
-        //save index with correct ship to capture the length
-        if(strcmp(ship, shipArray[i].name) == 0){
-            index = i;
-        }//ifcell_t array[NROp name\n");
-        return false;
-    }//if
-
-    //check origin is within bounds
+    //check if origin is within bounds
     if (proposal.startx < 0 || proposal.startx >= NCOLS || proposal.starty < 0 || proposal.starty >= NROWS){
+        printf("Invalid origin\n");
         return false;
     }//if
 
     //check orientation and then check based on that
     if (proposal.orientation == HORIZONTAL){
         //in horizontal case, check if we pass ends horizontally
-        if ((proposal.startx + shipArray[index].size) > NCOLS) return false;
+        if ((proposal.startx + size) > NCOLS) return false;
+        printf("valid horizontally\n");
     }else{
         //in vertical case, check if we pass ends vertically
-        if ((proposal.starty + shipArray[index].size) > NROWS) return false;
+        if ((proposal.starty + size) > NROWS) return false;
+        printf("valid vertically\n");
     }//ifelse
 
     //at this point, bounds must be valid, so initialize ship type and return true
-    proposal.shipType=shipArray[index];
     proposal.sunk=false;
     return true;
 }
@@ -107,6 +101,7 @@ enum Orientation validOrt(){
         //store input
         char orientation[2]; //2 because it's one character and a newline
         fgets(orientation, sizeof(orientation), stdin);
+        fgetc(stdin);//clean up our newline because fgets is leaving it there
 
         //check for valid input and save it into ORT if it's valid, otherwise loop again with an informative message
         if (orientation[0] == 'H'){
@@ -137,11 +132,12 @@ char * validCoords(char * yay){
     printf("Please input coordinates for the start point of your ship (ex: A,1): ");
 
      while (supa){
-        char coords[BUFFERSIZE];
+        char coords[4];
         fgets(coords, sizeof(coords), stdin);
-
+        fgetc(stdin);//clean up our newline because fgets is leaving it there
+        
         //ensure valid string length
-        if (strlen(coords) == 4){
+        if (strlen(coords) == 3){
 
             //set these for later use
             char letter = coords[0];
@@ -176,10 +172,9 @@ char * validCoords(char * yay){
                 yay[0] = possibleN;
                 yay[1] = possibleL;
                 return yay;
-            }else{
-                printf("Invalid input. Try again. Remember, the format is LETTER,NUMBER with a capital letter, a comma between the letter and number, and no spaces!\n");
             }
-        } else printf("Invalid input. Try again. Remember, the format is LETTER,NUMBER with a capital letter, a comma between the letter and number, and no spaces!\n");
+        } 
+        printf("Invalid input. Try again. Remember, the format is LETTER,NUMBER with a capital letter, a comma between the letter and number, and no spaces!\n");
     }
     return NULL;
 } 
@@ -203,7 +198,7 @@ board_t makeBoard(){
 
         //get user to give us their orientation for the ship
         enum Orientation bigO = INVALID;
-        bigO = validOrt(bigO); //this will not return until it's a valid orientation.
+        bigO = validOrt(); //this will not return until it's a valid orientation.
         if(bigO==INVALID) perror("SOMETHING WENT WroNG WITH ORIENTATION");
 
         //get user to give us their starting coordinate for the ship
@@ -217,7 +212,12 @@ board_t makeBoard(){
         char arrayY[2] = {coords[1], '\0'};
         proposal.startx = atoi(arrayX);
         proposal.starty = atoi(arrayY)-64;
-        if(!(checkBounds(board, current.name, proposal) && !checkOverlap(&board, proposal))) printf("Houston we have a big fucking problem with our proposed locash\n");
+        proposal.shipType = current;
+
+        if(checkBounds(board, proposal)) printf("checkbounds is fine\n");
+        if(!checkOverlap(&board, proposal)) printf("checkoverlap is fine\n");
+
+        if(!(checkBounds(board, proposal) && !checkOverlap(&board, proposal))) printf("Houston we have a big fucking problem with our proposed locash\n");
         //display the ship on the board
 
         //give user option to start over
