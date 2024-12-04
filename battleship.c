@@ -85,8 +85,55 @@ void run_server(unsigned short port) {
     // Main game loop
     bool game_running = true;
     while (game_running) {
-        // Handle game logic (similar to player1.c)
-        // Attack and defend logic here...
+        char attack_coords[16];
+        int x, y;
+
+        // Player 1's turn
+        printf("Player 1: Enter attack coordinates (e.g., A,1): ");
+        validCoords(attack_coords);
+        y = attack_coords[0] - 'A';
+        x = attack_coords[1] - '1';
+
+        // Send attack to Player 2
+        snprintf(attack_coords, sizeof(attack_coords), "%c,%c", attack_coords[0], attack_coords[1]);
+        send_message(client_socket_fd, attack_coords);
+
+        // Receive attack result
+        char *attack_result = receive_message(client_socket_fd);
+        printf("Player 2: %s\n", attack_result);
+        free(attack_result);
+
+        // Check if Player 1 won
+        if (checkVictory(&player2_board)) {
+            printf("Player 1 wins!\n");
+            send_message(client_socket_fd, "WIN");
+            break;
+        }
+
+        // Player 2's turn
+        printf("Waiting for Player 2's attack...\n");
+        char *enemy_attack = receive_message(client_socket_fd);
+        sscanf(enemy_attack, "%c,%c", &attack_coords[0], &attack_coords[1]);
+        y = attack_coords[0] - 'A';
+        x = attack_coords[1] - '1';
+        free(enemy_attack);
+
+        // Update Player 1's board
+        bool hit, sunk;
+        updateBoardAfterGuess(&player1_board, x, y, &hit, &sunk);
+
+        // Send attack result to Player 2
+        char result_message[16];
+        snprintf(result_message, sizeof(result_message), "%s%s",
+                 hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
+        send_message(client_socket_fd, result_message);
+
+        // Check if Player 2 won
+        if (checkVictory(&player1_board)) {
+            printf("Player 2 wins!\n");
+            send_message(client_socket_fd, "LOSE");
+            break;
+        }
     }
 
     close(client_socket_fd);
@@ -123,8 +170,55 @@ void run_client(char *server_name, unsigned short port) {
     // Main game loop
     bool game_running = true;
     while (game_running) {
-        // Handle game logic (similar to player2.c)
-        // Attack and defend logic here...
+        char attack_coords[16];
+        int x, y;
+
+        // Player 1's turn
+        printf("Waiting for Player 1's attack...\n");
+        char *enemy_attack = receive_message(socket_fd);
+        sscanf(enemy_attack, "%c,%c", &attack_coords[0], &attack_coords[1]);
+        y = attack_coords[0] - 'A';
+        x = attack_coords[1] - '1';
+        free(enemy_attack);
+
+        // Update Player 2's board
+        bool hit, sunk;
+        updateBoardAfterGuess(&player2_board, x, y, &hit, &sunk);
+
+        // Send attack result to Player 1
+        char result_message[16];
+        snprintf(result_message, sizeof(result_message), "%s%s",
+                 hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
+        send_message(socket_fd, result_message);
+
+        // Check if Player 1 won
+        if (checkVictory(&player2_board)) {
+            printf("Player 1 wins!\n");
+            send_message(socket_fd, "LOSE");
+            break;
+        }
+
+        // Player 2's turn
+        printf("Player 2: Enter attack coordinates (e.g., A,1): ");
+        validCoords(attack_coords);
+        y = attack_coords[0] - 'A';
+        x = attack_coords[1] - '1';
+
+        // Send attack to Player 1
+        snprintf(attack_coords, sizeof(attack_coords), "%c,%c", attack_coords[0], attack_coords[1]);
+        send_message(socket_fd, attack_coords);
+
+        // Receive attack result
+        char *attack_result = receive_message(socket_fd);
+        printf("Player 1: %s\n", attack_result);
+        free(attack_result);
+
+        // Check if Player 2 won
+        if (checkVictory(&player1_board)) {
+            printf("Player 2 wins!\n");
+            send_message(socket_fd, "WIN");
+            break;
+        }
     }
 
     close(socket_fd);
