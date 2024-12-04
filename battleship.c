@@ -8,8 +8,19 @@
 #include "gameMessage.h"
 #include "socket.h"
 
-// Function prototypes for server and client roles
+/**
+ * Initializes the server-side (Player 1) logic for the game 
+ * 
+ * @param port The port number the server will listen on
+ */ 
 void run_server(unsigned short port);
+
+/**
+ * Initializes the client-side (Player 2) logic for the game
+ * 
+ * @param server_name The IP or hostname of the server
+ * @param port        The port number the server is listening on. (8080)
+ */
 void run_client(char *server_name, unsigned short port);
 
 int main(int argc, char *argv[]) {
@@ -46,7 +57,11 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-// Server-side implementation
+/**
+ * Initializes the server-side (Player 1) logic for the game 
+ * 
+ * @param port The port number the server will listen on
+ */ 
 void run_server(unsigned short port) {
     // Create and bind the server socket
     int server_socket_fd = server_socket_open(&port);
@@ -152,7 +167,12 @@ void run_server(unsigned short port) {
     close(server_socket_fd);
 }
 
-// Client-side implementation
+/**
+ * Initializes the client-side (Player 2) logic for the game
+ * 
+ * @param server_name The IP or hostname of the server
+ * @param port        The port number the server is listening on. (8080)
+ */
 void run_client(char *server_name, unsigned short port) {
     // Connect to the server
     int socket_fd = socket_connect(server_name, port);
