@@ -6,8 +6,8 @@ all: battleship
 clean:
 	rm -f battleship
 
-battleship: cell.c board.c board.h main.c
-	$(CC) $(CFLAGS) -o battleship board.c cell.c main.c
+battleship: cell.c board.c board.h battleship.c gameMessage.c gameMessage.h socket.h 
+	$(CC) $(CFLAGS) -o battleship board.c cell.c gameMessage.c battleship.c
 
 zip:
 	@echo "Generating battleship.zip file to submit to Gradescope..."
