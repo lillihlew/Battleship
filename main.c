@@ -240,19 +240,11 @@ void handlePlayer2(const char *server_ip) {
 
 // Function to get valid coordinates from the user
 bool getCoordinates(char *xChar, int *yInput) {
-    printf("Enter coordinates (e.g., A 1): ");
-    scanf(" %c %d", xChar, yInput);
+    char coords[2] = {'\0','\0'}; // Buffer to store parsed coordinates
+    validCoords(coords);           // Call validCoords to get input
 
-    // Validate X and Y coordinates
-    if ((*xChar >= 'A' && *xChar <= 'J') || (*xChar >= 'a' && *xChar <= 'j')) {
-        if (*yInput >= 1 && *yInput <= 10) {
-            return true;
-        } else {
-            printf("Invalid Y-coordinate. Please enter a number between 1 and 10.\n");
-            return false;
-        }
-    } else {
-        printf("Invalid X-coordinate. Please enter a letter between A and J.\n");
-        return false;
-    }
+    // Convert coordinates to usable values
+    *xChar = coords[1];            // Letter (Yay[1] holds letter)
+    *yInput = coords[0] - '0';     // Number (Yay[0] holds number)
+    return true;  
 }
