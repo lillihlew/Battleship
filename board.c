@@ -9,7 +9,8 @@ const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cr
 
 //when passed in, proposal should have an unitialized shipType and it will be initialized within this if bounds are valid
 bool checkBounds (struct board board, struct shipLocation proposal){
-    
+    printf("in check bounds\n");
+    printf("%d %d", proposal.startx, proposal.starty);
     //save size of ship
     int size = proposal.shipType.size;
 
@@ -21,14 +22,20 @@ bool checkBounds (struct board board, struct shipLocation proposal){
 
     //check orientation and then check based on that
     if (proposal.orientation == HORIZONTAL){
+        printf("orientation is horizontal\n");
         //in horizontal case, check if we pass ends horizontally
         if ((proposal.startx + size) > NCOLS) return false;
         printf("valid horizontally\n");
-    }else{
+    }else if (proposal.orientation==VERTICAL){
+        printf("orientation is vertical\n");
         //in vertical case, check if we pass ends vertically
         if ((proposal.starty + size) > NROWS) return false;
         printf("valid vertically\n");
-    }//ifelse
+    }else{
+        printf("invalid orientation\n");
+        return false;
+    }
+    //ifelse
 
     //at this point, bounds must be valid, so initialize ship type and return true
     proposal.sunk=false;
@@ -169,8 +176,9 @@ char * validCoords(char * yay){
             //if both values are valid, end while loop and store values in string to be returned
             if(validL && validN){
                 supa=false;
-                yay[0] = possibleN;
-                yay[1] = possibleL;
+                yay[0] = possibleL;
+                yay[1] = possibleN;
+                printf("yay: %c%c", yay[0], yay[1]);
                 return yay;
             }
         } 
@@ -210,8 +218,11 @@ board_t makeBoard(){
         proposal.orientation = bigO;
         char arrayX[2] = {coords[0], '\0'};
         char arrayY[2] = {coords[1], '\0'};
+        printf("%s\n", arrayX);
+        printf("%s\n", arrayY);
+        printf("%c %c\n", coords[0], coords[1]);
         proposal.startx = atoi(arrayX);
-        proposal.starty = atoi(arrayY)-64;
+        proposal.starty = atoi(arrayY);
         proposal.shipType = current;
 
         if(checkBounds(board, proposal)) printf("checkbounds is fine\n");
