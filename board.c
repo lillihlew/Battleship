@@ -61,12 +61,12 @@ bool checkOverlap(board_t * board, struct shipLocation proposal){
     if (direction == HORIZONTAL){
         //check if proposed locations are already occupied
         for(int i = 0; i < proposal.shipType.size; i++){
-            if (array[x][y + i].occupied){
+            if (array[x + i][y].occupied){
                 return true;
             }
             //change cell status 
-            array[x][y + i].occupied = true;
-            array[x][y + i].ship = ship;
+            array[x + i][y].occupied = true;
+            array[x + i][y].ship = ship;
         }
     }
 
@@ -74,12 +74,12 @@ bool checkOverlap(board_t * board, struct shipLocation proposal){
     if (direction == VERTICAL){
         //same shit as above 
         for(int i = 0; i < proposal.shipType.size; i++){
-            if (array[x + i][y].occupied){
+            if (array[x][y + i].occupied){
                 return true;
             }
             //change cell status
-            array[x + i][y].occupied = true;
-            array[x + i][y].ship = ship;
+            array[x][y + i].occupied = true;
+            array[x][y + i].ship = ship;
         }
     }
 
@@ -205,13 +205,21 @@ board_t makeBoard(){
         //get user to give us their orientation for the ship
         enum Orientation bigO = INVALID;
         bigO = validOrt(); //this will not return until it's a valid orientation.
-        if(bigO==INVALID) perror("SOMETHING WENT WroNG WITH ORIENTATION");
+        if(bigO==INVALID) {
+            printf("INVALID ORIENTATION. Restarting this ship placement.\n");
+            i--;
+            continue;
+        }
 
         //get user to give us their starting coordinate for the ship
         char coords[3] = {'\0', '\0', '\0'};
         char empty[3] = {'\0', '\0', '\0'};
         memcpy(coords, validCoords(coords), (3* sizeof(char)));
-        if(strcmp(coords, empty) == 0) perror("SOMETHING WENT WRONG WITH COORDINATES");
+        if(strcmp(coords, empty) == 0) {
+            printf("INVALID COORDINATES. Restarting this ship placement.\n");
+            i--;
+            continue;
+        }
 
         //initialize proposal with valid values
         proposal.orientation = bigO;
@@ -220,9 +228,17 @@ board_t makeBoard(){
         proposal.shipType = current;
         proposal.sunk=false;
 
-        if(!(checkBounds(board, proposal))) perror("INVALID PLACEMENT-- BOUNDARY CROSSING");
-        if(checkOverlap(&board, proposal)) perror("INVALID PLACEMENT-- OVERLAP");
+        if(!(checkBounds(board, proposal))) {
+            printf("INVALID PLACEMENT-- BOUNDARY CROSSING. Restarting this ship placement.\n");
+            i--;
+            continue;
+        }
 
+        if(checkOverlap(&board, proposal)){
+            printf("INVALID PLACEMENT-- OVERLAP. Restarting this ship placement.\n");
+            i--;
+            continue;
+        } 
        
         //display the ship on the board
 
