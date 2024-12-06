@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "board.h"
 #include "gameMessage.h"
@@ -19,9 +20,17 @@ void run_server(unsigned short port);
  * Initializes the client-side (Player 2) logic for the game
  * 
  * @param server_name The IP or hostname of the server
- * @param port        The port number the server is listening on. (8080)
+ * @param port        The port number the server is listening on.
  */
 void run_client(char *server_name, unsigned short port);
+
+/**
+ * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
+ *      the game will exit normally.
+ * 
+ * @param input The user input being read.
+ */
+void hande_input(char* input);
 
 int main(int argc, char *argv[]) {
     // Validate command-line arguments
@@ -33,8 +42,7 @@ int main(int argc, char *argv[]) {
 
     // Check if the user wants to start as a server
     if (strcmp(argv[1], "server") == 0) {
-        unsigned short port = (argc == 3) ? atoi(argv[2]) : 8080; // Default port: 8080
-        printf("Starting server on port %u...\n", port);
+        unsigned short port = 0;    // Initialize the port
         run_server(port);
     } 
     // Check if the user wants to start as a client
@@ -63,7 +71,6 @@ int main(int argc, char *argv[]) {
  * @param port The port number the server will listen on
  */ 
 void run_server(unsigned short port) {
-    // Create and bind the server socket
     int server_socket_fd = server_socket_open(&port);
     if (server_socket_fd == -1) {
         perror("Failed to open server socket");
@@ -171,7 +178,7 @@ void run_server(unsigned short port) {
  * Initializes the client-side (Player 2) logic for the game
  * 
  * @param server_name The IP or hostname of the server
- * @param port        The port number the server is listening on. (8080)
+ * @param port        The port number the server is listening on.
  */
 void run_client(char *server_name, unsigned short port) {
     // Connect to the server
@@ -259,4 +266,17 @@ void run_client(char *server_name, unsigned short port) {
 
     // Close the connection
     close(socket_fd);
+}
+
+/**
+ * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
+ *      the game will exit normally.
+ * 
+ * @param input The user input being read.
+ */
+void hande_input(char* input) {
+    if (strcasecmp(input, "exit") == 0 || strcasecmp(input, "quit") == 0) {
+        printf("Exiting the game.\n");
+        exit(0);    // Clean exit
+    }
 }

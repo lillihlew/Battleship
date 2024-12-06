@@ -69,6 +69,13 @@ static int server_socket_open(unsigned short* port) {
     return -1;
   }
 
+  // Enable SO_REUSEADDR to reuse the port
+  int opt = 1;
+  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+    close(fd);
+    return -1;
+  }
+
   // Set up the server socket to listen
   struct sockaddr_in addr = {
       .sin_family = AF_INET,          // This is an internet socket
