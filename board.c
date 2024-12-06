@@ -7,10 +7,12 @@
 const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cruiser", 3} ,{"Battleship", 4} ,{"Aircraft Carrier", 5}};
 #define BUFFERSIZE 10
 
-//when passed in, proposal should have an unitialized shipType and it will be initialized within this if bounds are valid
+/**
+ * checkBounds takes a player's board and a player's proposal shipLocation and 
+ * returns true if the boundaries for the proposed ship location are not crossed 
+ * (i.e., the ship isn't off the board)
+ */
 bool checkBounds (struct board board, struct shipLocation proposal){
-    printf("in check bounds\n");
-    printf("%d %d", proposal.startx, proposal.starty);
     //save size of ship
     int size = proposal.shipType.size;
 
@@ -22,30 +24,27 @@ bool checkBounds (struct board board, struct shipLocation proposal){
 
     //check orientation and then check based on that
     if (proposal.orientation == HORIZONTAL){
-        printf("orientation is horizontal\n");
         //in horizontal case, check if we pass ends horizontally
         if ((proposal.startx + size) > NCOLS) return false;
-        printf("valid horizontally\n");
     }else if (proposal.orientation==VERTICAL){
-        printf("orientation is vertical\n");
         //in vertical case, check if we pass ends vertically
         if ((proposal.starty + size) > NROWS) return false;
-        printf("valid vertically\n");
     }else{
         printf("invalid orientation\n");
         return false;
     }
     //ifelse
 
-    //at this point, bounds must be valid, so initialize ship type and return true
-    proposal.sunk=false;
+    //at this point, bounds must be valid, so return true
     return true;
 }
 
 
-//this returns TRUE if there is an overlap on the board
-
-//it also updates board to occupy cells where proposal is
+/**
+ * checkOverlap takes a player's board and proposal shipLocation.
+ *  It returns true if there's an overlap present, otherwise it updates
+ *  the board to occupy cells where the proposed ship location is.
+ */
 bool checkOverlap(board_t * board, struct shipLocation proposal){
 
     //initialize an array with info from board
@@ -166,7 +165,7 @@ char * validCoords(char * yay){
             //loop through all possible valid numerical values and break loop if match is found
             for (int i = 0; i < 10; i++){
                 char array[2] = {number, '\0'};
-                if (atoi(array)==possibleN){
+                if ((atoi(array))==possibleN){
                     validN = true;
                     break;
                 }
@@ -176,9 +175,8 @@ char * validCoords(char * yay){
             //if both values are valid, end while loop and store values in string to be returned
             if(validL && validN){
                 supa=false;
-                yay[0] = possibleL;
-                yay[1] = possibleN;
-                printf("yay: %c%c", yay[0], yay[1]);
+                char validCoordinates[2] = {possibleL, possibleN};
+                yay=validCoordinates;
                 return yay;
             }
         } 
@@ -210,25 +208,22 @@ board_t makeBoard(){
         if(bigO==INVALID) perror("SOMETHING WENT WroNG WITH ORIENTATION");
 
         //get user to give us their starting coordinate for the ship
-        char coords[2] = {'\0', '\0'};
-        char empty[2] = {'\0', '\0'};
-        validCoords(coords);
-        if(strcmp(coords, empty) == 0) perror("SOMETHING WENT WroNG WITH COORDINATES");
+        char coords[3] = {'\0', '\0', '\0'};
+        char empty[3] = {'\0', '\0', '\0'};
+        memcpy(coords, validCoords(coords), (3* sizeof(char)));
+        if(strcmp(coords, empty) == 0) perror("SOMETHING WENT WRONG WITH COORDINATES");
 
+        //initialize proposal with valid values
         proposal.orientation = bigO;
-        char arrayX[2] = {coords[0], '\0'};
-        char arrayY[2] = {coords[1], '\0'};
-        printf("%s\n", arrayX);
-        printf("%s\n", arrayY);
-        printf("%c %c\n", coords[0], coords[1]);
-        proposal.startx = atoi(arrayX);
-        proposal.starty = atoi(arrayY);
+        proposal.startx = ((int) coords[0]) - 64;
+        proposal.starty = coords[1];
         proposal.shipType = current;
+        proposal.sunk=false;
 
-        if(checkBounds(board, proposal)) printf("checkbounds is fine\n");
-        if(!checkOverlap(&board, proposal)) printf("checkoverlap is fine\n");
+        if(!(checkBounds(board, proposal))) perror("INVALID PLACEMENT-- BOUNDARY CROSSING");
+        if(checkOverlap(&board, proposal)) perror("INVALID PLACEMENT-- OVERLAP");
 
-        if(!(checkBounds(board, proposal) && !checkOverlap(&board, proposal))) printf("Houston we have a big fucking problem with our proposed locash\n");
+       
         //display the ship on the board
 
         //give user option to start over
