@@ -25,12 +25,14 @@ void run_server(unsigned short port);
 void run_client(char *server_name, unsigned short port);
 
 /**
+ * **PUT THE PROTOTYPE IN 'BOARD.H'**
+ * 
  * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
  *      the game will exit normally.
  * 
  * @param input The user input being read.
  */
-void hande_input(char* input);
+void handle_input(char* input);
 
 int main(int argc, char *argv[]) {
     // Validate command-line arguments
@@ -43,6 +45,7 @@ int main(int argc, char *argv[]) {
     // Check if the user wants to start as a server
     if (strcmp(argv[1], "server") == 0) {
         unsigned short port = 0;    // Initialize the port
+        printf("Starting server...\n");
         run_server(port);
     } 
     // Check if the user wants to start as a client
@@ -92,7 +95,7 @@ void run_server(unsigned short port) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Client connected!\n");
+    printf("Player 2 connected!\n");
 
     // Initialize game boards for both players
     board_t player1_board, player2_board;
@@ -124,6 +127,7 @@ void run_server(unsigned short port) {
         // Player 1's turn
         printf("Player 1: Enter attack coordinates (e.g., A,1): ");
         validCoords(attack_coords);
+        handle_input(attack_coords);
         y = attack_coords[0] - 'A';     // Convert letter to row index
         x = attack_coords[1] - '1';     // Convert number to column index
 
@@ -146,6 +150,7 @@ void run_server(unsigned short port) {
         // Player 2's turn
         printf("Waiting for Player 2's attack...\n");
         char *enemy_attack = receive_message(client_socket_fd);
+        handle_input(enemy_attack);
         sscanf(enemy_attack, "%c,%c", &attack_coords[0], &attack_coords[1]);
         y = attack_coords[0] - 'A';
         x = attack_coords[1] - '1';
@@ -188,7 +193,7 @@ void run_client(char *server_name, unsigned short port) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Connected to server!\n");
+    printf("Connected to Player 1!\n");
 
     // Initialize game boards for both players
     board_t player2_board, player1_board;
@@ -219,6 +224,7 @@ void run_client(char *server_name, unsigned short port) {
         // Player 1's turn
         printf("Waiting for Player 1's attack...\n");
         char *enemy_attack = receive_message(socket_fd);
+        handle_input(enemy_attack);
         sscanf(enemy_attack, "%c,%c", &attack_coords[0], &attack_coords[1]);
         y = attack_coords[0] - 'A';
         x = attack_coords[1] - '1';
@@ -244,6 +250,7 @@ void run_client(char *server_name, unsigned short port) {
         // Player 2's turn
         printf("Player 2: Enter attack coordinates (e.g., A,1): ");
         validCoords(attack_coords);
+        handle_input(attack_coords);
         y = attack_coords[0] - 'A';
         x = attack_coords[1] - '1';
 
@@ -268,13 +275,15 @@ void run_client(char *server_name, unsigned short port) {
     close(socket_fd);
 }
 
-/**
+/** 
+ * **PUT THIS IN 'BOARD.C'**
+ * 
  * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
  *      the game will exit normally.
  * 
  * @param input The user input being read.
  */
-void hande_input(char* input) {
+void handle_input(char* input) {
     if (strcasecmp(input, "exit") == 0 || strcasecmp(input, "quit") == 0) {
         printf("Exiting the game.\n");
         exit(0);    // Clean exit
