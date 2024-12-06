@@ -17,8 +17,9 @@ bool checkBounds (struct board board, struct shipLocation proposal){
     int size = proposal.shipType.size;
 
     //check if origin is within bounds
-    if (proposal.startx < 0 || proposal.startx >= NCOLS || proposal.starty < 0 || proposal.starty >= NROWS){
-        printf("Invalid origin\n");
+    if (proposal.startx < 1 || proposal.startx >= (NCOLS+1) || proposal.starty < 1 || proposal.starty >= (NROWS+1)){
+        printf("Invalid origin:");
+        printf("%d %d\n", proposal.startx, proposal.starty);
         return false;
     }//if
 
