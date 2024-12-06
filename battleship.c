@@ -25,6 +25,11 @@ void run_server(unsigned short port);
 void run_client(char *server_name, unsigned short port);
 
 /**
+ * Display a welcome message to the players when they connect to the server.
+ */
+void welcome_message();
+
+/**
  * **PUT THE PROTOTYPE IN 'BOARD.H'**
  * 
  * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
@@ -97,13 +102,16 @@ void run_server(unsigned short port) {
 
     printf("Player 2 connected!\n");
 
+    // Display welcome message
+    welcome_message();
+
     // Initialize game boards for both players
     board_t player1_board, player2_board;
     initBoard(&player1_board);
     initBoard(&player2_board);
 
     // Player 1 place ships
-    printf("Player 1: Place your ships.\n");
+    printf("**Place your ships**\n");
     makeBoard(&player1_board);
     send_message(client_socket_fd, "READY");    // Notify the client that the server is ready
 
@@ -125,7 +133,7 @@ void run_server(unsigned short port) {
         int x, y;
 
         // Player 1's turn
-        printf("Player 1: Enter attack coordinates (e.g., A,1): ");
+        printf("**Enter attack coordinates (e.g., A,1)**: ");
         validCoords(attack_coords);
         handle_input(attack_coords);
         y = attack_coords[0] - 'A';     // Convert letter to row index
@@ -195,13 +203,16 @@ void run_client(char *server_name, unsigned short port) {
 
     printf("Connected to Player 1!\n");
 
+    // Display welcome message
+    welcome_message();
+
     // Initialize game boards for both players
     board_t player2_board, player1_board;
     initBoard(&player2_board);
     initBoard(&player1_board);
 
     // Player 2 place ships
-    printf("Player 2: Place your ships.\n");
+    printf("**Place your ships**\n");
     makeBoard(&player2_board);
     send_message(socket_fd, "READY");       // Notify the server that the client is ready
 
@@ -248,7 +259,7 @@ void run_client(char *server_name, unsigned short port) {
         }
 
         // Player 2's turn
-        printf("Player 2: Enter attack coordinates (e.g., A,1): ");
+        printf("**Enter attack coordinates (e.g., A,1)**: ");
         validCoords(attack_coords);
         handle_input(attack_coords);
         y = attack_coords[0] - 'A';
@@ -273,6 +284,31 @@ void run_client(char *server_name, unsigned short port) {
 
     // Close the connection
     close(socket_fd);
+}
+
+/**
+ * Display a welcome message to the players when they connect to the server.
+ */
+void welcome_message() {
+    printf("\n============================================================\n");
+    printf("                WELCOME TO BATTLESHIP!\n");
+    printf("============================================================\n");
+    printf("Rules of the game:\n");
+    printf("1. Each player has a 10x10 grid to place 5 ships:\n");
+    printf("   - Destroyer (2 spaces)\n");
+    printf("   - Submarine (3 spaces)\n");
+    printf("   - Cruiser (3 spaces)\n");
+    printf("   - Battleship (4 spaces)\n");
+    printf("   - Aircraft Carrier (5 spaces)\n");
+    printf("2. Players take turns guessing coordinates to attack.\n");
+    printf("3. A hit will mark part of a ship as damaged.\n");
+    printf("   NOTE: Players do not get consecutive turns if they hit an enemy ship\n");
+    printf("4. A ship is sunk when all its parts are hit.\n");
+    printf("5. The game ends when all ships of one player are sunk.\n");
+    printf("\nType 'exit' or 'quit' anytime to leave the game.\n");
+    printf("============================================================\n");
+    printf("                 LET THE BATTLE BEGIN!\n");
+    printf("============================================================\n\n");
 }
 
 /** 
