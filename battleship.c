@@ -1,13 +1,17 @@
+/**
+ * File basis taken from Charlie's networking exercise, and refined for our context - https://curtsinger.cs.grinnell.edu/teaching/2024F/CSC213/exercises/networking/
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <time.h>
 
 #include "board.h"
 #include "gameMessage.h"
 #include "socket.h"
+#include "graphics.h"
 
 /**
  * Initializes the server-side (Player 1) logic for the game 
@@ -30,8 +34,6 @@ void run_client(char *server_name, unsigned short port);
 void welcome_message();
 
 /**
- * **PUT THE PROTOTYPE IN 'BOARD.H'**
- * 
  * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
  *      the game will exit normally.
  * 
@@ -79,6 +81,7 @@ int main(int argc, char *argv[]) {
  * @param port The port number the server will listen on
  */ 
 void run_server(unsigned short port) {
+    // Create and bind the server socket
     int server_socket_fd = server_socket_open(&port);
     if (server_socket_fd == -1) {
         perror("Failed to open server socket");
@@ -90,6 +93,7 @@ void run_server(unsigned short port) {
 
     if (listen(server_socket_fd, 1) == -1) {
         perror("Failed to listen on server socket");
+        close(server_socket_fd);
         exit(EXIT_FAILURE);
     }
 
@@ -97,6 +101,7 @@ void run_server(unsigned short port) {
     int client_socket_fd = server_socket_accept(server_socket_fd);
     if (client_socket_fd == -1) {
         perror("Failed to accept client connection");
+        close(server_socket_fd);
         exit(EXIT_FAILURE);
     }
 
@@ -105,23 +110,40 @@ void run_server(unsigned short port) {
     // Display welcome message
     welcome_message();
 
+    // Wait for players to press 'Enter' to begin
+    printf("\nPress Enter to start the game...\n");
+    while (getchar() != '\n');
+
+    // Initialize curses for graphics
+    init_curses();
+
+    // Create graphical windows for the boards
+    WINDOW* player_win = create_board_window(1, 1, "Your Board");
+    WINDOW* opponent_win = create_board_window(1, 40, "Opponent's Board");
+
     // Initialize game boards for both players
     board_t player1_board, player2_board;
     initBoard(&player1_board);
     initBoard(&player2_board);
 
-    // Player 1 place ships
+    // Player 1 places ships
     printf("**Place your ships**\n");
     makeBoard(&player1_board);
-    send_message(client_socket_fd, "READY");    // Notify the client that the server is ready
+
+    // Update the player's board window
+    draw_board(player_win, player1_board.array, false);
+
+    // Notify the client that the server is ready
+    send_message(client_socket_fd, "READY");
 
     // Wait for the client to be ready
-    char *message = receive_message(client_socket_fd);
+    char* message = receive_message(client_socket_fd);
     if (strcmp(message, "READY") != 0) {
         printf("Client not ready. Exiting.\n");
         free(message);
         close(client_socket_fd);
         close(server_socket_fd);
+        end_curses();
         exit(EXIT_FAILURE);
     }
     free(message);
@@ -134,18 +156,28 @@ void run_server(unsigned short port) {
 
         // Player 1's turn
         printf("**Enter attack coordinates (e.g., A,1)**: ");
-        validCoords(attack_coords);
-        handle_input(attack_coords);
-        y = attack_coords[0] - 'A';     // Convert letter to row index
-        x = attack_coords[1] - '1';     // Convert number to column index
+        // validCoords(attack_coords);
+        handle_input(attack_coords); // Check for 'exit' or 'quit'
+        y = attack_coords[0] - 'A';  // Convert letter to row index
+        x = attack_coords[1] - '1';  // Convert number to column index
 
         // Send attack to Player 2
         snprintf(attack_coords, sizeof(attack_coords), "%c,%c", attack_coords[0], attack_coords[1]);
         send_message(client_socket_fd, attack_coords);
 
         // Receive attack result
-        char *attack_result = receive_message(client_socket_fd);
+        char* attack_result = receive_message(client_socket_fd);
         printf("Player 2: %s\n", attack_result);
+
+        // Update the opponent's board window with the result
+        if (strcmp(attack_result, "HIT") == 0) {
+            player2_board.array[y][x].guessed = true;
+            player2_board.array[y][x].hit = true;
+        } else if (strcmp(attack_result, "MISS") == 0) {
+            player2_board.array[y][x].guessed = true;
+        }
+        draw_board(opponent_win, player2_board.array, true);
+
         free(attack_result);
 
         // Check if Player 1 won
@@ -157,8 +189,8 @@ void run_server(unsigned short port) {
 
         // Player 2's turn
         printf("Waiting for Player 2's attack...\n");
-        char *enemy_attack = receive_message(client_socket_fd);
-        handle_input(enemy_attack);
+        char* enemy_attack = receive_message(client_socket_fd);
+        handle_input(enemy_attack); // Check for 'exit' or 'quit'
         sscanf(enemy_attack, "%c,%c", &attack_coords[0], &attack_coords[1]);
         y = attack_coords[0] - 'A';
         x = attack_coords[1] - '1';
@@ -174,6 +206,9 @@ void run_server(unsigned short port) {
                  hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
         send_message(client_socket_fd, result_message);
 
+        // Update the player's board window with the result
+        draw_board(player_win, player1_board.array, false);
+
         // Check if Player 2 won
         if (checkVictory(&player1_board)) {
             printf("Player 2 wins!\n");
@@ -182,9 +217,10 @@ void run_server(unsigned short port) {
         }
     }
 
-    // Clear sockets
+    // Close sockets and end curses
     close(client_socket_fd);
     close(server_socket_fd);
+    end_curses();
 }
 
 /**
@@ -193,7 +229,7 @@ void run_server(unsigned short port) {
  * @param server_name The IP or hostname of the server
  * @param port        The port number the server is listening on.
  */
-void run_client(char *server_name, unsigned short port) {
+void run_client(char* server_name, unsigned short port) {
     // Connect to the server
     int socket_fd = socket_connect(server_name, port);
     if (socket_fd == -1) {
@@ -206,22 +242,39 @@ void run_client(char *server_name, unsigned short port) {
     // Display welcome message
     welcome_message();
 
+    // Wait for players to press 'Enter' to begin
+    printf("\nPress Enter to start the game...\n");
+    while (getchar() != '\n');
+
+    // Initialize curses for graphics
+    init_curses();
+
+    // Create graphical windows for the boards
+    WINDOW* player_win = create_board_window(1, 1, "Your Board");
+    WINDOW* opponent_win = create_board_window(1, 40, "Opponent's Board");
+
     // Initialize game boards for both players
     board_t player2_board, player1_board;
     initBoard(&player2_board);
     initBoard(&player1_board);
 
-    // Player 2 place ships
+    // Player 2 places ships
     printf("**Place your ships**\n");
     makeBoard(&player2_board);
-    send_message(socket_fd, "READY");       // Notify the server that the client is ready
+
+    // Update the player's board window
+    draw_board(player_win, player2_board.array, false);
+
+    // Notify the server that the client is ready
+    send_message(socket_fd, "READY");
 
     // Wait for the server to be ready
-    char *message = receive_message(socket_fd);
+    char* message = receive_message(socket_fd);
     if (strcmp(message, "READY") != 0) {
         printf("Server not ready. Exiting.\n");
         free(message);
         close(socket_fd);
+        end_curses();
         exit(EXIT_FAILURE);
     }
     free(message);
@@ -234,8 +287,8 @@ void run_client(char *server_name, unsigned short port) {
 
         // Player 1's turn
         printf("Waiting for Player 1's attack...\n");
-        char *enemy_attack = receive_message(socket_fd);
-        handle_input(enemy_attack);
+        char* enemy_attack = receive_message(socket_fd);
+        handle_input(enemy_attack); // Check for 'exit' or 'quit'
         sscanf(enemy_attack, "%c,%c", &attack_coords[0], &attack_coords[1]);
         y = attack_coords[0] - 'A';
         x = attack_coords[1] - '1';
@@ -251,6 +304,9 @@ void run_client(char *server_name, unsigned short port) {
                  hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
         send_message(socket_fd, result_message);
 
+        // Update the player's board window with the result
+        draw_board(player_win, player2_board.array, false);
+
         // Check if Player 1 won
         if (checkVictory(&player2_board)) {
             printf("Player 1 wins!\n");
@@ -260,8 +316,8 @@ void run_client(char *server_name, unsigned short port) {
 
         // Player 2's turn
         printf("**Enter attack coordinates (e.g., A,1)**: ");
-        validCoords(attack_coords);
-        handle_input(attack_coords);
+        // validCoords(attack_coords);
+        handle_input(attack_coords); // Check for 'exit' or 'quit'
         y = attack_coords[0] - 'A';
         x = attack_coords[1] - '1';
 
@@ -270,8 +326,18 @@ void run_client(char *server_name, unsigned short port) {
         send_message(socket_fd, attack_coords);
 
         // Receive attack result
-        char *attack_result = receive_message(socket_fd);
+        char* attack_result = receive_message(socket_fd);
         printf("Player 1: %s\n", attack_result);
+
+        // Update the opponent's board window with the result
+        if (strcmp(attack_result, "HIT") == 0) {
+            player1_board.array[y][x].guessed = true;
+            player1_board.array[y][x].hit = true;
+        } else if (strcmp(attack_result, "MISS") == 0) {
+            player1_board.array[y][x].guessed = true;
+        }
+        draw_board(opponent_win, player1_board.array, true);
+
         free(attack_result);
 
         // Check if Player 2 won
@@ -282,8 +348,9 @@ void run_client(char *server_name, unsigned short port) {
         }
     }
 
-    // Close the connection
+    // Close the connection and end curses
     close(socket_fd);
+    end_curses();
 }
 
 /**
@@ -311,9 +378,7 @@ void welcome_message() {
     printf("============================================================\n\n");
 }
 
-/** 
- * **PUT THIS IN 'BOARD.C'**
- * 
+/**
  * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
  *      the game will exit normally.
  * 

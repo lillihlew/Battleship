@@ -1,3 +1,7 @@
+/**
+ * File taken from Charlie's networking exercise - https://curtsinger.cs.grinnell.edu/teaching/2024F/CSC213/exercises/networking/
+ */
+
 #include "gameMessage.h"
 
 #include <errno.h>
