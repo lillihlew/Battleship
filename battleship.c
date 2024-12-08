@@ -171,10 +171,10 @@ void run_server(unsigned short port) {
 
         // Update the opponent's board window with the result
         if (strcmp(attack_result, "HIT") == 0) {
-            player2_board.array[y][x].guessed = true;
-            player2_board.array[y][x].hit = true;
+            player2_board.array[x][y].guessed = true;
+            player2_board.array[x][y].hit = true;
         } else if (strcmp(attack_result, "MISS") == 0) {
-            player2_board.array[y][x].guessed = true;
+            player2_board.array[x][y].guessed = true;
         }
         draw_board(opponent_win, player2_board.array, true);
 
@@ -290,8 +290,8 @@ void run_client(char* server_name, unsigned short port) {
         char* enemy_attack = receive_message(socket_fd);
         handle_input(enemy_attack); // Check for 'exit' or 'quit'
         sscanf(enemy_attack, "%c,%c", &attack_coords[0], &attack_coords[1]);
-        y = attack_coords[0] - 'A';
-        x = attack_coords[1] - '1';
+        x = attack_coords[0] - 'A';
+        y = attack_coords[1] - '1';
         free(enemy_attack);
 
         // Update Player 2's board based on Player 1's attack
@@ -318,8 +318,8 @@ void run_client(char* server_name, unsigned short port) {
         printf("**Enter attack coordinates (e.g., A,1)**: ");
         // validCoords(attack_coords);
         handle_input(attack_coords); // Check for 'exit' or 'quit'
-        y = attack_coords[0] - 'A';
-        x = attack_coords[1] - '1';
+        x = attack_coords[0] - 'A';
+        y = attack_coords[1] - '1';
 
         // Send attack to Player 1
         snprintf(attack_coords, sizeof(attack_coords), "%c,%c", attack_coords[0], attack_coords[1]);
@@ -331,10 +331,10 @@ void run_client(char* server_name, unsigned short port) {
 
         // Update the opponent's board window with the result
         if (strcmp(attack_result, "HIT") == 0) {
-            player1_board.array[y][x].guessed = true;
-            player1_board.array[y][x].hit = true;
+            player1_board.array[x][y].guessed = true;
+            player1_board.array[x][y].hit = true;
         } else if (strcmp(attack_result, "MISS") == 0) {
-            player1_board.array[y][x].guessed = true;
+            player1_board.array[x][y].guessed = true;
         }
         draw_board(opponent_win, player1_board.array, true);
 

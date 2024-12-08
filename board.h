@@ -26,7 +26,7 @@ typedef struct cell{
 bool isOccupied(cell_t c);
 
 typedef struct board{
-    cell_t array[NROWS][NCOLS];
+    cell_t array[NROWS+1][NCOLS+1];
 }board_t;
 
 
@@ -47,7 +47,7 @@ typedef struct shipLocation{
 
 
 
-bool checkBounds (struct board board, struct shipLocation proposal);
+bool checkBounds (struct shipLocation proposal);
 
 // Function to handle the logic of processing an attack on the opponent's board
 void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk);
@@ -64,7 +64,7 @@ bool checkOverlap(board_t * board, struct shipLocation proposal);
 
 enum Orientation validOrt();
 
-char* validCoords(char * yay);
+int* validCoords(int * yay);
 
 board_t makeBoard();
 

@@ -34,7 +34,7 @@ WINDOW* create_board_window(int start_y, int start_x, const char* title);
  * @param board      The 10x10 game board array to display.
  * @param hide_ships If true, hides the ships from view (used for opponent's board).
  */
-void draw_board(WINDOW* win, cell_t board[10][10], bool hide_ships);
+void draw_board(WINDOW* win, cell_t board[NROWS+1][NCOLS+1], bool hide_ships);
 
 /**
  * End the curses environment
