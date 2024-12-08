@@ -32,7 +32,7 @@ WINDOW* create_board_window(int start_x, int start_y, const char* title) {
     WINDOW* win = newwin(15, 35, start_x, start_y); // 10x10 grid + padding
     box(win, 0, 0);                                // Draw a border around the window
     mvwprintw(win, 0, 2, "[ %s ]", title);         // Add a title to the window
-    // move(15, 0);
+    // move(16, 0);
     wrefresh(win);                                 // Refresh the window to display it
     return win;
 }
@@ -57,7 +57,7 @@ void draw_board(WINDOW* win, cell_t board[NROWS+1][NCOLS+1], bool hide_ships) {
         }
     }
     wrefresh(win);
-    // move(15, 0);
+    // move(16, 0);
 }
 
 /**
