@@ -123,11 +123,11 @@ void run_server(unsigned short port) {
 
     // Initialize game boards for both players
     board_t player1_board, player2_board;
-    initBoard(&player1_board);
-    initBoard(&player2_board);
+    // initBoard(&player1_board);
+    // initBoard(&player2_board);
 
     // Player 1 places ships
-    printf("**Place your ships**\n");
+    printw("**Place your ships**\n");
     makeBoard(&player1_board);
 
     // Update the player's board window
@@ -255,8 +255,8 @@ void run_client(char* server_name, unsigned short port) {
 
     // Initialize game boards for both players
     board_t player2_board, player1_board;
-    initBoard(&player2_board);
-    initBoard(&player1_board);
+    // initBoard(&player2_board);
+    // initBoard(&player1_board);
 
     // Player 2 places ships
     printf("**Place your ships**\n");

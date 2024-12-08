@@ -14,7 +14,7 @@
 void init_curses() {
     initscr();           // Initialize the screen
     cbreak();            // Disable line buffering
-    // noecho();            // Disable echoing of input
+    echo();            // Enable echoing of input
     curs_set(0);         // Hide the cursor
     keypad(stdscr, TRUE); // Enable special keys (e.g., arrows)
 }
