@@ -19,13 +19,13 @@ void init_curses();
 /**
  * Creates a new window to represent a player's or opponent's game board.
  * 
- * @param start_y  The starting row position for the window.
  * @param start_x  The starting column position for the window.
+ * @param start_y  The starting row position for the window.
  * @param title    The title to display at the top of the window.
  * 
  * @return A pointer to the created window.
  */
-WINDOW* create_board_window(int start_y, int start_x, const char* title);
+WINDOW* create_board_window(int start_x, int start_y, const char* title);
 
 /**
  * Draws the game board for a player or opponent in the given window.
