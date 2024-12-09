@@ -120,29 +120,35 @@ enum Orientation validOrt(WINDOW * window){
     enum Orientation ORT = INVALID;
 
     //provide user instructions
-    
+    mvwprintw(window, cursor++, 1, "Please input orientation (V/H): ");
 
     //loop until we have valid input
     while (ORT==INVALID){
-
-        mvwprintw(window, cursor, 1, "Please input orientation (V/H): ");
-
+        // mvwprintw(window, cursor++, 1, "top of loop\n");
         //store input
         char orientation[2]; //2 because it's one character and a terminating character
-        // fgets(orientation, sizeof(orientation), stdin);
         wgetnstr(window, orientation, sizeof(orientation));
-        mvwprintw(window, cursor, (strlen("Please input orientation (V/H): ")+1), "%s", orientation);
+        //print user input (at least the first character) so they can see what they entered
+        mvwprintw(window, cursor++, (strlen("Please input orientation (V/H): ")+1), "%s", orientation);
         // char extra = fgetc(stdin);
-        char extra = wgetch(window);
-        cursor++;
-        if(extra != '\n'){
+        //commenting this out because we can't access these values
+        // char extra = wgetch(window);
+        // cursor++;
+        // if(extra != '\n'){
+        //     mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
+        //     mvwprintw(window, cursor++, 3, "for horizontal: \n");
+        //     // while (fgetc(stdin) != '\n');
+        //     while (extra != '\n') {
+        //         extra = wgetch(window) != '\n';
+        //         mvwprintw(window, cursor, 1, &extra);
+        //     }
+
+        //i need to rewrite this to be a while loop that loops until orientation has a terminating character at orientation[1], then check orientation [0]
+        // mvwprintw(window, cursor++, 1, "orientation[1]: %c.\n", orientation[1]);
+
+        if(orientation[1]!='\0'){
             mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
             mvwprintw(window, cursor++, 3, "for horizontal: \n");
-            // while (fgetc(stdin) != '\n');
-            while (extra != '\n') {
-                extra = wgetch(window) != '\n';
-                mvwprintw(window, cursor, 1, &extra);
-            }
         } else {
             //check for valid input and save it into ORT if it's valid, otherwise loop again with an informative message
             if (orientation[0] == 'H'){
@@ -150,10 +156,11 @@ enum Orientation validOrt(WINDOW * window){
             } else if(orientation[0] == 'V') {
                 ORT = VERTICAL;
             } else {
-                mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' for horizontal: ");
-                
+                mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
+                mvwprintw(window, cursor++, 3, "for horizontal: \n");
             }
         }
+        mvwprintw(window, cursor++, 1, "I made it through the loop and ORT is %d (if 1 invalid)\n", (ORT==INVALID));
 
     }//while
 
