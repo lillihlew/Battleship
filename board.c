@@ -120,7 +120,7 @@ enum Orientation validOrt(WINDOW * window){
     enum Orientation ORT = INVALID;
 
     //provide user instructions
-    mvwprintw(window, cursor++, 1, "Please input orientation (V/H): ");
+    mvwprintw(window, cursor, 1, "Please input orientation (V/H): ");
 
     //loop until we have valid input
     while (ORT==INVALID){
