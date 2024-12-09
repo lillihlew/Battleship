@@ -53,7 +53,6 @@ void run_server(unsigned short port) {
 
     // Start listening for incoming connections
     printf("Server listening on port %u\n", port);
-
     if (listen(server_socket_fd, 1) == -1) {
         perror("Failed to listen on server socket");
         close(server_socket_fd);
@@ -69,13 +68,9 @@ void run_server(unsigned short port) {
     }
 
     printf("Player 2 connected!\n");
-
-    // Display welcome message
-    //welcome_message();
-
-    // Wait for players to press 'Enter' to begin
-    printf("\nPress Enter to start the game...\n");
-    while (getchar() != '\n');
+    sleep(1);
+    printf("Game Loading. Please fullscreen your terminal."); 
+    sleep(5);
 
     // Initialize curses for graphics
     init_curses();
@@ -83,6 +78,10 @@ void run_server(unsigned short port) {
     // Create graphical windows for the boards
     WINDOW* player_win = create_board_window(1, 1, "Your Board");
     WINDOW* opponent_win = create_board_window(1, 40, "Opponent's Board");
+    WINDOW* prompt_win = create_prompt_window(16, 1);
+
+    // Display welcome message
+    welcome_message(prompt_win);
 
     // Initialize game boards for both players
     board_t player1_board, player2_board;
@@ -90,7 +89,8 @@ void run_server(unsigned short port) {
     initBoard(&player2_board);
 
     // Player 1 places ships
-    printw("**Place your ships**\n");
+    mvwprintw(prompt_win, 1, 1, "**Place your ships**");
+    wrefresh(prompt_win);
     makeBoard(&player1_board);
 
     // Update the player's board window
@@ -118,20 +118,21 @@ void run_server(unsigned short port) {
         int x, y;
 
         // Player 1's turn
-        printf("**Enter attack coordinates (e.g., A,1)**: ");
-        validCoords(&attack_coords[2]);
-        // handle_input(&attack_coords); // Check for 'exit' or 'quit'
-        x = attack_coords[0];  // Convert letter to row index
-        y = attack_coords[1];  // Convert number to column index
+        mvwprintw(prompt_win, 1, 1, "Enter attack coordinates (e.g., A,1): ");
+        wrefresh(prompt_win);
+        validCoords(attack_coords);
+        x = attack_coords[0];  // Row index
+        y = attack_coords[1];  // Column index
 
         // Send attack to Player 2
-        char attack_message[264];
-        snprintf(attack_message, sizeof(attack_message), "%d,%d", attack_coords[0], attack_coords[1]);        
+        char attack_message[16];
+        snprintf(attack_message, sizeof(attack_message), "%d,%d", x, y);
         send_message(client_socket_fd, attack_message);
 
         // Receive attack result
         char* attack_result = receive_message(client_socket_fd);
-        printf("Player 2: %s\n", attack_result);
+        mvwprintw(prompt_win, 1, 1, "Player 2: %s\n", attack_result);
+        wrefresh(prompt_win);
 
         // Update the opponent's board window with the result
         if (strcmp(attack_result, "HIT") == 0) {
@@ -141,20 +142,20 @@ void run_server(unsigned short port) {
             player2_board.array[x][y].guessed = true;
         }
         draw_board(opponent_win, player2_board.array, true);
-
         free(attack_result);
 
         // Check if Player 1 won
         if (checkVictory(&player2_board)) {
-            printf("Player 1 wins!\n");
+            mvwprintw(prompt_win, 1, 1, "Player 1 wins!\n");
+            wrefresh(prompt_win);
             send_message(client_socket_fd, "WIN");
             break;
         }
 
         // Player 2's turn
-        printf("Waiting for Player 2's attack...\n");
+        mvwprintw(prompt_win, 1, 1, "Waiting for Player 2's attack...\n");
+        wrefresh(prompt_win);
         char* enemy_attack = receive_message(client_socket_fd);
-        // handle_input(enemy_attack); // Check for 'exit' or 'quit'
         sscanf(enemy_attack, "%d,%d", &attack_coords[0], &attack_coords[1]);
         x = attack_coords[0];
         y = attack_coords[1];
@@ -166,8 +167,7 @@ void run_server(unsigned short port) {
 
         // Send attack result to Player 2
         char result_message[16];
-        snprintf(result_message, sizeof(result_message), "%s%s",
-                 hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
+        snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
         send_message(client_socket_fd, result_message);
 
         // Update the player's board window with the result
@@ -175,7 +175,8 @@ void run_server(unsigned short port) {
 
         // Check if Player 2 won
         if (checkVictory(&player1_board)) {
-            printf("Player 2 wins!\n");
+            mvwprintw(prompt_win, 1, 1, "Player 2 wins!\n");
+            wrefresh(prompt_win);
             send_message(client_socket_fd, "LOSE");
             break;
         }
@@ -186,6 +187,7 @@ void run_server(unsigned short port) {
     close(server_socket_fd);
     end_curses();
 }
+
 
 /**
  * Initializes the client-side (Player 2) logic for the game
@@ -202,13 +204,9 @@ void run_client(char* server_name, unsigned short port) {
     }
 
     printf("Connected to Player 1!\n");
-
-    // Display welcome message
-    //welcome_message();
-
-    // Wait for players to press 'Enter' to begin
-    printf("\nPress Enter to start the game...\n");
-    while (getchar() != '\n');
+    sleep(1);
+    printf("Game Loading. Please fullscreen your terminal."); 
+    sleep(5);
 
     // Initialize curses for graphics
     init_curses();
@@ -216,6 +214,10 @@ void run_client(char* server_name, unsigned short port) {
     // Create graphical windows for the boards
     WINDOW* player_win = create_board_window(1, 1, "Your Board");
     WINDOW* opponent_win = create_board_window(1, 40, "Opponent's Board");
+    WINDOW* prompt_win = create_prompt_window(16, 1);
+
+    // Display welcome message
+    welcome_message(prompt_win);
 
     // Initialize game boards for both players
     board_t player2_board, player1_board;
@@ -223,7 +225,8 @@ void run_client(char* server_name, unsigned short port) {
     initBoard(&player1_board);
 
     // Player 2 places ships
-    printw("**Place your ships**\n");
+    mvwprintw(prompt_win, 1, 1, "**Place your ships**");
+    wrefresh(prompt_win);
     makeBoard(&player2_board);
 
     // Update the player's board window
@@ -235,7 +238,8 @@ void run_client(char* server_name, unsigned short port) {
     // Wait for the server to be ready
     char* message = receive_message(socket_fd);
     if (strcmp(message, "READY") != 0) {
-        printf("Server not ready. Exiting.\n");
+        mvwprintw(prompt_win, 1, 1, "Server not ready. Exiting.\n");
+        wrefresh(prompt_win);
         free(message);
         close(socket_fd);
         end_curses();
@@ -250,9 +254,9 @@ void run_client(char* server_name, unsigned short port) {
         int x, y;
 
         // Player 1's turn
-        printf("Waiting for Player 1's attack...\n");
+        mvwprintw(prompt_win, 1, 1, "Waiting for Player 1's attack...\n");
+        wrefresh(prompt_win);
         char* enemy_attack = receive_message(socket_fd);
-        // handle_input(enemy_attack); // Check for 'exit' or 'quit'
         sscanf(enemy_attack, "%d,%d", &attack_coords[0], &attack_coords[1]);
         x = attack_coords[0];
         y = attack_coords[1];
@@ -264,8 +268,7 @@ void run_client(char* server_name, unsigned short port) {
 
         // Send attack result to Player 1
         char result_message[16];
-        snprintf(result_message, sizeof(result_message), "%s%s",
-                 hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
+        snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
         send_message(socket_fd, result_message);
 
         // Update the player's board window with the result
@@ -273,26 +276,28 @@ void run_client(char* server_name, unsigned short port) {
 
         // Check if Player 1 won
         if (checkVictory(&player2_board)) {
-            printf("Player 1 wins!\n");
+            mvwprintw(prompt_win, 1, 1, "Player 1 wins!\n");
+            wrefresh(prompt_win);
             send_message(socket_fd, "LOSE");
             break;
         }
 
         // Player 2's turn
-        printf("**Enter attack coordinates (e.g., A,1)**: ");
-        // validCoords(attack_coords);
-        // handle_input(attack_coords); // Check for 'exit' or 'quit'
+        mvwprintw(prompt_win, 1, 1, "**Enter attack coordinates (e.g., A,1): ");
+        wrefresh(prompt_win);
+        validCoords(attack_coords);
         x = attack_coords[0];
         y = attack_coords[1];
 
         // Send attack to Player 1
-        char attack_message[264];
-        snprintf(attack_message, sizeof(attack_message), "%d,%d", attack_coords[0], attack_coords[1]);        
+        char attack_message[16];
+        snprintf(attack_message, sizeof(attack_message), "%d,%d", x, y);
         send_message(socket_fd, attack_message);
 
         // Receive attack result
         char* attack_result = receive_message(socket_fd);
-        printf("Player 1: %s\n", attack_result);
+        mvwprintw(prompt_win, 1, 1, "Player 1: %s\n", attack_result);
+        wrefresh(prompt_win);
 
         // Update the opponent's board window with the result
         if (strcmp(attack_result, "HIT") == 0) {
@@ -302,12 +307,12 @@ void run_client(char* server_name, unsigned short port) {
             player1_board.array[x][y].guessed = true;
         }
         draw_board(opponent_win, player1_board.array, true);
-
         free(attack_result);
 
         // Check if Player 2 won
         if (checkVictory(&player1_board)) {
-            printf("Player 2 wins!\n");
+            mvwprintw(prompt_win, 1, 1, "Player 2 wins!\n");
+            wrefresh(prompt_win);
             send_message(socket_fd, "WIN");
             break;
         }
@@ -318,13 +323,15 @@ void run_client(char* server_name, unsigned short port) {
     end_curses();
 }
 
+
 /**
  * Display a welcome message to the players when they connect to the server.
  * 
  * @param prompt_win The curses window for displaying prompt
  */
 void welcome_message(WINDOW* prompt_win) {
-    wclear(prompt_win);     // Clear the propmt window
+    wclear(prompt_win);     // Clear the prompt window
+    box(prompt_win, 0, 0);  // Redraw the border
     mvwprintw(prompt_win, 1, 1, "============================================================");
     mvwprintw(prompt_win, 2, 1, "                WELCOME TO BATTLESHIP!");
     mvwprintw(prompt_win, 3, 1, "============================================================");
@@ -342,11 +349,9 @@ void welcome_message(WINDOW* prompt_win) {
     mvwprintw(prompt_win, 17, 1, "5. The game ends when all ships of one player are sunk.");
     mvwprintw(prompt_win, 19, 1, "Type 'exit' or 'quit' anytime to leave the game.");
     mvwprintw(prompt_win, 20, 1, "============================================================");
-    mvwprintw(prompt_win, 22, 1, "                 LET THE BATTLE BEGIN!");
-    mvwprintw(prompt_win, 23, 1, "============================================================");
-
-    // Prompt user to press 'Enter' to continue
-    mvwprintw(prompt_win, 25, 1, "Press Enter to start the game...");
+    mvwprintw(prompt_win, 21, 1, "                 LET THE BATTLE BEGIN!");
+    mvwprintw(prompt_win, 22, 1, "============================================================");
+    mvwprintw(prompt_win, 24, 1, "Press Enter to start the game...");
     wrefresh(prompt_win);       // Refresh the window to display changes
     
     // Wait for the player to press Enter
@@ -354,7 +359,13 @@ void welcome_message(WINDOW* prompt_win) {
     do {
         ch = wgetch(prompt_win);
     } while (ch != '\n');
+
+    // Clear the prompt window after Enter is pressed
+    wclear(prompt_win);
+    box(prompt_win, 0, 0);  // Redraw the border for further prompts
+    wrefresh(prompt_win);
 }
+
 
 /**
  * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,

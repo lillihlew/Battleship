@@ -17,6 +17,7 @@ void init_curses() {
     noecho();            // Disable echoing of input
     curs_set(1);         // Show the cursor
     keypad(stdscr, TRUE); // Enable special keys (e.g., arrows)
+    mousemask(0, NULL);
 }
 
 /**
@@ -68,7 +69,7 @@ void draw_board(WINDOW* win, cell_t board[NROWS+1][NCOLS+1], bool hide_ships) {
  * @return A pointer to the created window.
  */
 WINDOW* create_prompt_window(int start_x, int start_y) {
-    WINDOW* win = newwin(5, 70, start_x, start_y);
+    WINDOW* win = newwin(30, 74, start_x, start_y);
     box(win, 0, 0);
     mvwprintw(win, 0, 2, "[ Prompt ]");
     wrefresh(win);
