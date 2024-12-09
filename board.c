@@ -131,12 +131,13 @@ enum Orientation validOrt(WINDOW * window){
         char orientation[2]; //2 because it's one character and a terminating character
         // fgets(orientation, sizeof(orientation), stdin);
         wgetnstr(window, orientation, sizeof(orientation));
-        mvwprintw(window, cursor, 1, orientation);
+        mvwprintw(window, cursor, (strlen("Please input orientation (V/H): ")+1), "%s", orientation);
         // char extra = fgetc(stdin);
         char extra = wgetch(window);
         cursor++;
         if(extra != '\n'){
-            mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' for horizontal: ");
+            mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
+            mvwprintw(window, cursor++, 3, "for horizontal: \n");
             // while (fgetc(stdin) != '\n');
             while (extra != '\n') {
                 extra = wgetch(window) != '\n';
