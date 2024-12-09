@@ -37,6 +37,24 @@ WINDOW* create_board_window(int start_x, int start_y, const char* title);
 void draw_board(WINDOW* win, cell_t board[NROWS+1][NCOLS+1], bool hide_ships);
 
 /**
+ * Creates a new window to display prompts and handle user input.
+ * 
+ * @param start_x  The starting column position for the window.
+ * @param start_y  The starting row position for the window.
+ * 
+ * @return A pointer to the created window.
+ */
+WINDOW* create_prompt_window(int start_x, int start_y);
+
+/**
+ * Displays a prompt message in the given window and clears the input field.
+ * 
+ * @param win     The window where the prompt is displayed.
+ * @param message The message to display.
+ */
+void display_prompt(WINDOW* win, const char* prompt, char* input, int max_len);
+
+/**
  * End the curses environment
  */
 void end_curses();

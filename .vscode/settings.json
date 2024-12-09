@@ -3,6 +3,7 @@
         "string.h": "c",
         "stdlib.h": "c",
         "message.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "battleship.h": "c"
     }
 }

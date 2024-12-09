@@ -421,6 +421,7 @@ void initBoard(board_t *board) {
     }
 }
 
+
 void printStatus(board_t board){
     for (int i = 1; i < NROWS+1; i++){
         for (int j = 1; j < NROWS+1; j++){

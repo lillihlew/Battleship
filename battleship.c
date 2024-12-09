@@ -2,44 +2,7 @@
  * File basis taken from Charlie's networking exercise, and refined for our context - https://curtsinger.cs.grinnell.edu/teaching/2024F/CSC213/exercises/networking/
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdbool.h>
-
-#include "board.h"
-#include "gameMessage.h"
-#include "socket.h"
-#include "graphics.h"
-
-/**
- * Initializes the server-side (Player 1) logic for the game 
- * 
- * @param port The port number the server will listen on
- */ 
-void run_server(unsigned short port);
-
-/**
- * Initializes the client-side (Player 2) logic for the game
- * 
- * @param server_name The IP or hostname of the server
- * @param port        The port number the server is listening on.
- */
-void run_client(char *server_name, unsigned short port);
-
-/**
- * Display a welcome message to the players when they connect to the server.
- */
-void welcome_message();
-
-/**
- * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
- *      the game will exit normally.
- * 
- * @param input The user input being read.
- */
-void handle_input(char* input);
+#include "battleship.h"
 
 int main(int argc, char *argv[]) {
     // Validate command-line arguments
@@ -108,7 +71,7 @@ void run_server(unsigned short port) {
     printf("Player 2 connected!\n");
 
     // Display welcome message
-    welcome_message();
+    //welcome_message();
 
     // Wait for players to press 'Enter' to begin
     printf("\nPress Enter to start the game...\n");
@@ -123,8 +86,8 @@ void run_server(unsigned short port) {
 
     // Initialize game boards for both players
     board_t player1_board, player2_board;
-    // initBoard(&player1_board);
-    // initBoard(&player2_board);
+    initBoard(&player1_board);
+    initBoard(&player2_board);
 
     // Player 1 places ships
     printw("**Place your ships**\n");
@@ -162,8 +125,9 @@ void run_server(unsigned short port) {
         y = attack_coords[1];  // Convert number to column index
 
         // Send attack to Player 2
-        snprintf(attack_coords, sizeof(attack_coords), "%d,%d", attack_coords[0], attack_coords[1]);
-        send_message(client_socket_fd, attack_coords);
+        char attack_message[264];
+        snprintf(attack_message, sizeof(attack_message), "%d,%d", attack_coords[0], attack_coords[1]);        
+        send_message(client_socket_fd, attack_message);
 
         // Receive attack result
         char* attack_result = receive_message(client_socket_fd);
@@ -240,7 +204,7 @@ void run_client(char* server_name, unsigned short port) {
     printf("Connected to Player 1!\n");
 
     // Display welcome message
-    welcome_message();
+    //welcome_message();
 
     // Wait for players to press 'Enter' to begin
     printf("\nPress Enter to start the game...\n");
@@ -255,8 +219,8 @@ void run_client(char* server_name, unsigned short port) {
 
     // Initialize game boards for both players
     board_t player2_board, player1_board;
-    // initBoard(&player2_board);
-    // initBoard(&player1_board);
+    initBoard(&player2_board);
+    initBoard(&player1_board);
 
     // Player 2 places ships
     printw("**Place your ships**\n");
@@ -322,8 +286,9 @@ void run_client(char* server_name, unsigned short port) {
         y = attack_coords[1];
 
         // Send attack to Player 1
-        snprintf(attack_coords, sizeof(attack_coords), "%d,%d", attack_coords[0], attack_coords[1]);
-        send_message(socket_fd, attack_coords);
+        char attack_message[264];
+        snprintf(attack_message, sizeof(attack_message), "%d,%d", attack_coords[0], attack_coords[1]);        
+        send_message(socket_fd, attack_message);
 
         // Receive attack result
         char* attack_result = receive_message(socket_fd);
@@ -355,38 +320,111 @@ void run_client(char* server_name, unsigned short port) {
 
 /**
  * Display a welcome message to the players when they connect to the server.
+ * 
+ * @param prompt_win The curses window for displaying prompt
  */
-void welcome_message() {
-    printf("\n============================================================\n");
-    printf("                WELCOME TO BATTLESHIP!\n");
-    printf("============================================================\n");
-    printf("Rules of the game:\n");
-    printf("1. Each player has a 10x10 grid to place 5 ships:\n");
-    printf("   - Destroyer (2 spaces)\n");
-    printf("   - Submarine (3 spaces)\n");
-    printf("   - Cruiser (3 spaces)\n");
-    printf("   - Battleship (4 spaces)\n");
-    printf("   - Aircraft Carrier (5 spaces)\n");
-    printf("2. Players take turns guessing coordinates to attack.\n");
-    printf("3. A hit will mark part of a ship as damaged.\n");
-    printf("   NOTE: Players do not get consecutive turns if they hit an enemy ship\n");
-    printf("4. A ship is sunk when all its parts are hit.\n");
-    printf("5. The game ends when all ships of one player are sunk.\n");
-    printf("\nType 'exit' or 'quit' anytime to leave the game.\n");
-    printf("============================================================\n");
-    printf("                 LET THE BATTLE BEGIN!\n");
-    printf("============================================================\n\n");
+void welcome_message(WINDOW* prompt_win) {
+    wclear(prompt_win);     // Clear the propmt window
+    mvwprintw(prompt_win, 1, 1, "============================================================");
+    mvwprintw(prompt_win, 2, 1, "                WELCOME TO BATTLESHIP!");
+    mvwprintw(prompt_win, 3, 1, "============================================================");
+    mvwprintw(prompt_win, 5, 1, "Rules of the game:");
+    mvwprintw(prompt_win, 6, 1, "1. Each player has a 10x10 grid to place 5 ships:");
+    mvwprintw(prompt_win, 7, 1, "   - Destroyer (2 spaces)");
+    mvwprintw(prompt_win, 8, 1, "   - Submarine (3 spaces)");
+    mvwprintw(prompt_win, 9, 1, "   - Cruiser (3 spaces)");
+    mvwprintw(prompt_win, 10, 1, "   - Battleship (4 spaces)");
+    mvwprintw(prompt_win, 11, 1, "   - Aircraft Carrier (5 spaces)");
+    mvwprintw(prompt_win, 13, 1, "2. Players take turns guessing coordinates to attack.");
+    mvwprintw(prompt_win, 14, 1, "3. A hit will mark part of a ship as damaged.");
+    mvwprintw(prompt_win, 15, 1, "   NOTE: Players do not get consecutive turns if they hit an enemy ship");
+    mvwprintw(prompt_win, 16, 1, "4. A ship is sunk when all its parts are hit.");
+    mvwprintw(prompt_win, 17, 1, "5. The game ends when all ships of one player are sunk.");
+    mvwprintw(prompt_win, 19, 1, "Type 'exit' or 'quit' anytime to leave the game.");
+    mvwprintw(prompt_win, 20, 1, "============================================================");
+    mvwprintw(prompt_win, 22, 1, "                 LET THE BATTLE BEGIN!");
+    mvwprintw(prompt_win, 23, 1, "============================================================");
+
+    // Prompt user to press 'Enter' to continue
+    mvwprintw(prompt_win, 25, 1, "Press Enter to start the game...");
+    wrefresh(prompt_win);       // Refresh the window to display changes
+    
+    // Wait for the player to press Enter
+    int ch;
+    do {
+        ch = wgetch(prompt_win);
+    } while (ch != '\n');
 }
 
 /**
  * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
  *      the game will exit normally.
  * 
- * @param input The user input being read.
+ * @param prompt_win    The curses window for displaying prompts
+ * @param input         The user input being read.
+ * @param leave_player  The player that is trying to exit
+ * @param oppo_player   The player thats just chillin
+ * @param socket_fd     Socket sending the quit message
  */
-void handle_input(char* input) {
-    if (strcasecmp(input, "exit") == 0 || strcasecmp(input, "quit") == 0) {
-        printf("Exiting the game.\n");
-        exit(0);    // Clean exit
+void player_leave(WINDOW* prompt_win, char* input, const char* leave_player, const char* oppo_player, int socket_fd) {
+    // Display the prompt
+    mvwprintw(prompt_win, 1, 1, "Enter input (or type 'quit'/'exit' to leave): ");
+    wrefresh(prompt_win);
+
+    // Read input from the user in the prompt window
+    wgetnstr(prompt_win, input, 256); // 256 is just the buffer size
+
+    // Trim newline char if present
+    size_t len = strlen(input);
+    if (len > 0 && input[len - 1] == '\n') {
+        input[len - 1] = '\0';
     }
+
+    // Check if the input is 'quit' or 'exit'
+    if (strcasecmp(input, "exit") == 0 || strcasecmp(input, "quit") == 0) {
+        // Ask the user for confirmation
+        wclear(prompt_win);
+        mvwprintw(prompt_win, 1, 1, "Only losers rage quit. Are you sure you want to leave the game? (Y/N): ");
+        wrefresh(prompt_win);
+
+        char confirm[256];
+        wgetnstr(prompt_win, confirm, 256);
+
+        // Check confirmation response
+        if (strcasecmp(confirm, "Y") == 0) {
+            // If confirmed, notify both players and exit
+            char quit_message[256];
+            snprintf(quit_message, sizeof(quit_message), "%s rage quit. You win!", leave_player);
+            send_message(socket_fd, quit_message);      // Notify the opposing player
+
+            wclear(prompt_win);
+            mvwprintw(prompt_win, 1, 1, "Oh well...%s Wins!", oppo_player);
+            wrefresh(prompt_win);
+            sleep(2);       // Pause before exiting
+            end_curses();   // End the curses environment
+            exit(0);        // Exit the program
+        } else if (strcasecmp(confirm, "N") == 0) {
+            // If not confirmed, clear the prompt and return to the last state of the game
+            wclear(prompt_win);
+            mvwprintw(prompt_win, 1, 1, "Returning to the game...");
+            wrefresh(prompt_win);
+            sleep(1);   // Pause for clarity
+            wclear(prompt_win);
+            wrefresh(prompt_win);
+            return;        
+        } else {
+            // Handle input during confirmation
+            wclear(prompt_win);
+            mvwprintw(prompt_win, 1, 1, "Invalid response. Returning to the game...");
+            wrefresh(prompt_win);
+            sleep(1);   // Pause for clarity
+            wclear(prompt_win);
+            wrefresh(prompt_win);
+            return;
+        }
+    } 
+
+    // Clear the prompt window after receiving valid input
+    wclear(prompt_win);
+    wrefresh(prompt_win);
 }

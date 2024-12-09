@@ -56,6 +56,7 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
 //      If any cell is occupied by a ship and not marked as hit, the game is not over
 bool checkVictory(board_t *board);
 
+
 // Function that initializes a players game board
 void initBoard(board_t *board); 
 

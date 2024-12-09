@@ -7,7 +7,7 @@ all: battleship
 clean:
 	rm -f battleship
 
-battleship: cell.c board.c board.h battleship.c gameMessage.c gameMessage.h socket.h graphics.c graphics.h
+battleship: cell.c board.c board.h battleship.c battleship.h gameMessage.c gameMessage.h socket.h graphics.c graphics.h
 	$(CC) $(CFLAGS) -o $@ board.c cell.c gameMessage.c battleship.c graphics.c $(LDFLAGS)
 
 zip:
