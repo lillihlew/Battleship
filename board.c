@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "board.h"
 #include <curses.h>
+#include "graphics.h"
 
 const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cruiser", 3} ,{"Battleship", 4} ,{"Aircraft Carrier", 5}};
 #define BUFFERSIZE 4
@@ -270,7 +271,7 @@ int * validCoords(int * yay, WINDOW * window){
  * makeBoard loops through all of the ships and places them on the board. 
  * It returns the initialized board on success and an empty board on failure... but it shouldn't be able to fail.
  */
-board_t makeBoard(WINDOW * window){
+board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
     //make a new board and a proposal ship location
     board_t board;
     board_t *boardPtr = malloc((sizeof(cell_t))*(NROWS+1)*(NCOLS+1));
@@ -329,7 +330,7 @@ board_t makeBoard(WINDOW * window){
             continue;
         } else {
             for (int i = 0; i < proposal.shipType.size; i++){
-                if (bigO == VERTICAL){
+                if (bigO == HORIZONTAL){
                     board.array[proposal.startx][proposal.starty + i].occupied = true;
                     board.array[proposal.startx][proposal.starty + i].ship = proposal.shipType;
                 } else {
@@ -350,19 +351,28 @@ board_t makeBoard(WINDOW * window){
         char input;
         // input = fgetc(stdin);
         input = wgetch(window);
-        while(input != '\n' || input!= 'R'){
+        //wgetnstr(window, input, 2);
+
+
+        while(input != '\n' && input != 'R' && input != 'r'){
             mvwprintw(window, cursor++, 1, "Invalid input: please input R to reset or hit enter to continue.\n");
             // input = fgetc(stdin);
-            input = wgetch(window);
+            input = (char) wgetch(window);
+              
         }
-        
-        if(input == 'R') {
+
+        if(input == 'R' || input == 'r') {
             board_t cleanBoard;
             initBoard(&cleanBoard);
             memcpy(&board, &cleanBoard, sizeof(cell_t)*121);
-            i=0;
-        } 
+            i = 0;
+        }
+
+        draw_board(playerWindow, board.array, false);
+        werase(window);
+        box(window, 0, 0);
         cursor = INIT_CURSOR;
+    
         //clean the window?
 
         // printStatus(board);
