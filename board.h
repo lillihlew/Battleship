@@ -68,5 +68,5 @@ enum Orientation validOrt(WINDOW * window);
 
 int* validCoords(int * yay, WINDOW * window);
 
-board_t makeBoard(WINDOW * window);
+board_t makeBoard(WINDOW * window, WINDOW * playerWindow);
 
