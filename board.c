@@ -118,18 +118,22 @@ enum Orientation validOrt(WINDOW * window){
     
     //set ORT to INVALID to control the while loop which will loop until we have a valid orientation
     enum Orientation ORT = INVALID;
+    bool invalid = true;
+    int space = strlen("Please input orientation (V/H): ")+1;
+    // mvwprintw(window, cursor++, 1, "%d", space);
 
     //provide user instructions
     mvwprintw(window, cursor, 1, "Please input orientation (V/H): ");
 
     //loop until we have valid input
-    while (ORT==INVALID){
+    while (invalid){
         // mvwprintw(window, cursor++, 1, "top of loop\n");
         //store input
         char orientation[2]; //2 because it's one character and a terminating character
-        wgetnstr(window, orientation, sizeof(orientation));
+        wgetnstr(window, orientation, sizeof(orientation)-1);
         //print user input (at least the first character) so they can see what they entered
-        mvwprintw(window, cursor++, (strlen("Please input orientation (V/H): ")+1), "%s", orientation);
+        mvwprintw(window, cursor++, space, "%s", orientation);
+        // mvwprintw(window, cursor++, 1, "%d", space);
         // char extra = fgetc(stdin);
         //commenting this out because we can't access these values
         // char extra = wgetch(window);
@@ -148,19 +152,24 @@ enum Orientation validOrt(WINDOW * window){
 
         if(orientation[1]!='\0'){
             mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
-            mvwprintw(window, cursor++, 3, "for horizontal: \n");
+            mvwprintw(window, cursor, 3, "for horizontal: \n");
+            space = strlen("for horizontal: \n")+3;
         } else {
+            // mvwprintw(window, cursor++, 1, "in the else\n");
             //check for valid input and save it into ORT if it's valid, otherwise loop again with an informative message
             if (orientation[0] == 'H'){
                 ORT = HORIZONTAL;
+                invalid = false;
             } else if(orientation[0] == 'V') {
                 ORT = VERTICAL;
+                invalid = false;
             } else {
                 mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
-                mvwprintw(window, cursor++, 3, "for horizontal: \n");
+                mvwprintw(window, cursor, 3, "for horizontal: \n");
+                space = strlen("for horizontal: \n")+3;
             }
         }
-        mvwprintw(window, cursor++, 1, "I made it through the loop and ORT is %d (if 1 invalid)\n", (ORT==INVALID));
+        // mvwprintw(window, cursor++, 1, "I made it through the loop and ORT is %d (if 1 invalid)\n", (ORT==INVALID));
 
     }//while
 
