@@ -1,5 +1,6 @@
 #pragma once
 #include <stdbool.h>
+#include <curses.h>
 
 #define NROWS 10
 #define NCOLS 10
@@ -50,7 +51,7 @@ typedef struct shipLocation{
 bool checkBounds (struct shipLocation proposal);
 
 // Function to handle the logic of processing an attack on the opponent's board
-void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk);
+void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk, WINDOW * window);
 
 // Function that iterates through all cells on the board, checking for any unsunk ship parts.
 //      If any cell is occupied by a ship and not marked as hit, the game is not over
@@ -63,9 +64,9 @@ void initBoard(board_t *board);
 
 bool checkOverlap(board_t * board, struct shipLocation proposal);
 
-enum Orientation validOrt();
+enum Orientation validOrt(WINDOW * window);
 
-int* validCoords(int * yay);
+int* validCoords(int * yay, WINDOW * window);
 
-board_t makeBoard();
+board_t makeBoard(WINDOW * window);
 

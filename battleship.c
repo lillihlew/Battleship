@@ -85,13 +85,14 @@ void run_server(unsigned short port) {
 
     // Initialize game boards for both players
     board_t player1_board, player2_board;
-    initBoard(&player1_board);
-    initBoard(&player2_board);
+    // initBoard(&player1_board);
+    // initBoard(&player2_board);
 
     // Player 1 places ships
     mvwprintw(prompt_win, 1, 1, "**Place your ships**");
     wrefresh(prompt_win);
-    makeBoard(&player1_board);
+    player1_board = makeBoard(prompt_win);
+    // memcpy(&player1_board, &(makeBoard(prompt_win)), ((sizeof(cell_t))*(NROWS+1)*(NCOLS+1)));
 
     // Update the player's board window
     draw_board(player_win, player1_board.array, false);
@@ -120,7 +121,7 @@ void run_server(unsigned short port) {
         // Player 1's turn
         mvwprintw(prompt_win, 1, 1, "Enter attack coordinates (e.g., A,1): ");
         wrefresh(prompt_win);
-        validCoords(attack_coords);
+        validCoords(attack_coords, prompt_win);
         x = attack_coords[0];  // Row index
         y = attack_coords[1];  // Column index
 
@@ -163,7 +164,7 @@ void run_server(unsigned short port) {
 
         // Update Player 1's board based on Player 2's attack
         bool hit, sunk;
-        updateBoardAfterGuess(&player1_board, x, y, &hit, &sunk);
+        updateBoardAfterGuess(&player1_board, x, y, &hit, &sunk, prompt_win);
 
         // Send attack result to Player 2
         char result_message[16];
@@ -227,7 +228,8 @@ void run_client(char* server_name, unsigned short port) {
     // Player 2 places ships
     mvwprintw(prompt_win, 1, 1, "**Place your ships**");
     wrefresh(prompt_win);
-    makeBoard(&player2_board);
+    // memcpy(&player2_board, &(makeBoard(prompt_win)), ((sizeof(cell_t))*(NROWS+1)*(NCOLS+1)));
+    player2_board = makeBoard(prompt_win);
 
     // Update the player's board window
     draw_board(player_win, player2_board.array, false);
@@ -264,7 +266,7 @@ void run_client(char* server_name, unsigned short port) {
 
         // Update Player 2's board based on Player 1's attack
         bool hit, sunk;
-        updateBoardAfterGuess(&player2_board, x, y, &hit, &sunk);
+        updateBoardAfterGuess(&player2_board, x, y, &hit, &sunk, prompt_win);
 
         // Send attack result to Player 1
         char result_message[16];
@@ -285,7 +287,7 @@ void run_client(char* server_name, unsigned short port) {
         // Player 2's turn
         mvwprintw(prompt_win, 1, 1, "**Enter attack coordinates (e.g., A,1): ");
         wrefresh(prompt_win);
-        validCoords(attack_coords);
+        validCoords(attack_coords, prompt_win);
         x = attack_coords[0];
         y = attack_coords[1];
 
