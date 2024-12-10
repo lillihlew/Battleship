@@ -187,38 +187,75 @@ int * validCoords(int * yay, WINDOW * window){
 
     //use this bool to control the while loop to loop until both coordinate values are valid
     bool supa = true;
+    int space = strlen("Please input coordinates for the start point of your ship (ex: A,1): ")+1;
 
     //give user instructions and store their input into coords[]
-    mvwprintw(window, cursor++, 1, "Please input coordinates for the start point of your ship (ex: A,1): ");
+    mvwprintw(window, cursor, 1, "Please input coordinates for the start point of your ship (ex: A,1): ");
 
-
-     while (supa){
+    //loop until we have valid input
+    while (supa){
         char coords[BUFFERSIZE];
+        bool ten = false;
+
         // fgets(coords, sizeof(coords), stdin);
-        wgetnstr(window, coords, sizeof(coords));
+        for(int i = 0; i<BUFFERSIZE-1; i++){
+            coords[i]=(char)wgetch(window);
+            if(coords[i]=='\n') break;
+            // mvwprintw(window, cursor++, space, "%c\n",coords[i]);
+        }
+        // mvwprintw(window, cursor++, space, "%d\n", strlen(coords));
+        // wgetnstr(window, coords, sizeof(coords)-1);
+        
+        // cursor++;
+        mvwprintw(window, cursor, space, "%s", coords);
         // printf("coords.: %s.\n",coords);
         // int len = strlen(coords);
-        // printf("strlen of input: %d\n", len);
+        // mvwprintw(window, cursor++, 1, "strlen of input: %d\n", len);
 
         bool noNewlines = ((coords[0]!='\n')&&(coords[1]!='\n')&&(coords[2]!='\n'));
         bool comma = (coords[1]==',');
+        // mvwprintw(window, cursor++, 1, "coords[3]: %c.", coords[3]);
 
         //ensure valid string length
         if (strlen(coords) == 3 && noNewlines && comma){
-            bool ten = false;
-            // char next = fgetc(stdin);
-            char next = wgetch(window);
+            
+            //get the next character- should either be a \n or a 0
+            char next = (char) wgetch(window);
 
-            // if((coords[2]=='1')&&(next=='0')&&(fgetc(stdin)=='\n')){
-            if((coords[2]=='1')&&(next=='0')&&(wgetch(window)=='\n')){
-                ten = true;
-                }else if(next!='\n'){
-                mvwprintw(window, cursor++, 1, "Invalid input! Try again. Remember, the format is LETTER,NUMBER with a capital letter, a comma between the letter and number, and no spaces! : ");
-                // while(fgetc(stdin)!='\n');
-                while(wgetch(window)!='\n');
-                continue;
+            //check for a 10
+            if(coords[2]=='1'){
+                
+                // mvwprintw(window, cursor++, space, ".%c.\n", next);
+                if((next=='0')&&(((char) wgetch(window))=='\n')){
+                    ten = true;
+                    mvwprintw(window, cursor++, space+3, "%c\n", next);
+                }else{
+                    mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
+                }
+
+                if((next!='\n')&&(!ten)){
+                    cursor++;
+                    mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+                    mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number,\n");
+                    mvwprintw(window, cursor, 1, " and no spaces! : ");
+                    space = strlen("and no spaces! : ")+1;
+                    continue;
+                }else{
+                    // mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
+                }
+            }else{
+                mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
+                if(next!='\n'){
+                    cursor++;
+                    mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+                    mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number,\n");
+                    mvwprintw(window, cursor, 1, " and no spaces! : ");
+                    space = strlen("and no spaces! : ")+1;
+                    continue;
+                }else{
+                    mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
+                }
             }
-            // printf(".%c.\n", next);
 
             //set these for later use
             char letter = coords[0];
@@ -259,10 +296,15 @@ int * validCoords(int * yay, WINDOW * window){
                 int validCoordinates[2] = {intLetter, possibleN};
                 // printf("coordinates: %d %d\n", validCoordinates[0], validCoordinates[1]);
                 yay=validCoordinates;
+                // mvwprintw(window, cursor++, 1, "%d %d", yay[0], yay[1]);
                 return yay;
             }
         } 
-        mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER with a capital letter, a comma between the letter and number, and no spaces! : ");
+        cursor++;
+        mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+        mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number, \n");
+        mvwprintw(window, cursor, 1, " and no spaces! : ");
+        space = strlen("and no spaces! : ")+1;
     }
     return NULL;
 } 
