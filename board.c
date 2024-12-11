@@ -6,31 +6,35 @@
 #include <curses.h>
 #include "graphics.h"
 
+//the ships we use in the game
 const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cruiser", 3} ,{"Battleship", 4} ,{"Aircraft Carrier", 5}};
+
+//number of characters we read in at a time 
 #define BUFFERSIZE 4
-#define INIT_CURSOR 2;
+
+//vertical start index for the cursor of the user input window
+#define INIT_CURSOR 2 
+
+//track where the cursor is
 size_t cursor = INIT_CURSOR;
 
-/**
- * checkBounds takes a player's board and a player's proposal shipLocation and 
- * returns true if the boundaries for the proposed ship location are not crossed 
- * (i.e., the ship isn't off the board)
+
+
+/**checkBounds
+ *  checkBounds takes a player's proposal shipLocation (including origin, size, 
+ *  and orientation) and returns true if the boundaries for the proposed ship 
+ *  location are not crossed (i.e., the ship isn't off the board)
  */
 bool checkBounds (struct shipLocation proposal){
     //save size of ship
     int size = proposal.shipType.size;
-    // printf("checkBounds origin: %d,%d\n", proposal.startx, proposal.starty);
-    // printf("origin x is %d (1 is true)", (proposal.startx < 1));
-    // printf("origin x is %d (1 is true)", (proposal.startx >= (NCOLS+1)));
 
-    //check if origin is within bounds
+    //check if origin is within bounds and return false if not
     if (proposal.startx < 1 || proposal.startx >= (NCOLS+1) || proposal.starty < 1 || proposal.starty >= (NROWS+1)){
-        // printf("Invalid origin:");
-        // printf("%d %d\n", proposal.startx, proposal.starty);
         return false;
-    }//if
+    }
 
-    //check orientation and then check based on that
+    //check orientation and then check if ship based on that
     if (proposal.orientation == HORIZONTAL){
         //in horizontal case, check if we pass ends horizontally
         if ((proposal.startx + (size-1)) > NCOLS) return false;
@@ -38,103 +42,93 @@ bool checkBounds (struct shipLocation proposal){
         //in vertical case, check if we pass ends vertically
         if ((proposal.starty + (size-1)) > NROWS) return false;
     }else{
-        // printf("invalid orientation\n");
+        //invalid orientation
         return false;
     }
-    //ifelse
 
     //at this point, bounds must be valid, so return true
     return true;
 }
 
 
-/**
- * checkOverlap takes a player's board and proposal shipLocation.
- *  It returns true if there's an overlap present, otherwise it updates
- *  the board to occupy cells where the proposed ship location is.
+
+/**checkOverlap
+ *  checkOverlap takes a player's board and proposal shipLocation.
+ *  It returns true if there's an overlap present.
+ *  Assumptions: proposal's coordinates and orientation are valid
  */
 bool checkOverlap(board_t * board, struct shipLocation proposal){
-    // printf("in checkOverlap\n");
 
-    //initialize an array with info from board
+    //initialize an array with info from board so we can modify it as we check for overlap
     cell_t array[NROWS+1][NROWS+1];
     memcpy(array, board, sizeof(cell_t)*121);
 
-    //start coords and info of ship
+    //save start coords and info of ship
     int x = proposal.startx;
     int y = proposal.starty;
     shipType_t ship = proposal.shipType;
     enum Orientation direction = proposal.orientation;
 
-    // int occupationStatus;
-    // if (array[x][y].occupied) {
-    //     occupationStatus = 1;
-    //  } else occupationStatus = 0;
-
-    // printf("proposal cell %d %d .occupied is %d (1 is true)\n", x, y, array[x][y].occupied);
-
-    //horizontal
+    
+    //horizontal case
     if (direction == HORIZONTAL){
-        //check if proposed locations are already occupied
+        //check if proposed locations are already occupied and return true if so
         for(int i = 0; i < proposal.shipType.size; i++){
             if (array[x + i][y].occupied){
-                // printf("cell %d,%d is occupied\n", (x+i), y);
                 return true;
             }
             //change cell status 
             array[x + i][y].occupied = true;
             array[x + i][y].ship = ship;
-            // printf("cell %d,%d is now occupied\n", (x+i), y);
         }
     }
 
     //vertical
     if (direction == VERTICAL){
-        //same shit as above 
+        //check if proposed locations are already occupied and return true if so
         for(int i = 0; i < proposal.shipType.size; i++){
             if (array[x][y + i].occupied){
                 return true;
             }
             //change cell status
-            // printf("cell %d %d occupied status is %d (1 is true)\n", x, y+i, array[x][y+i].occupied);
             array[x][y + i].occupied = true;
             array[x][y + i].ship = ship;
-            // printf("cell %d,%d is now occupied\n", x, (y+i));
         }
     }
 
-    //update the board and return false if everything is good
-    // printStatus(*board);
-    // //memcpy(board, array, sizeof(cell_t)*121);
-    // printStatus(*board);
+    //to get here, there was no overlap
     return false;
 }
 
 
-/**
- * validOrt instructs the user to give us an orientation (either "V" or "H") and loops until 
- * the user inputs a valid orientation. It then returns that valid orientation
+
+/**validOrt
+ *  validOrt takes the user input window 
+ *  validOrt instructs the user to give us an orientation (either "V" or "H") and loops until 
+ *  the user inputs a valid orientation. It then returns that valid orientation.
+ *  Since we handle user input here, the function is mostly error checking.
  */
 enum Orientation validOrt(WINDOW * window){
     
     //set ORT to INVALID to control the while loop which will loop until we have a valid orientation
     enum Orientation ORT = INVALID;
     bool invalid = true;
+    
+    //save this value so that we can print to the correct horizontal cursor location
     int space = strlen("Please input orientation (V/H): ")+1;
-    // mvwprintw(window, cursor++, 1, "%d", space);
 
     //provide user instructions
     mvwprintw(window, cursor, 1, "Please input orientation (V/H): ");
 
     //loop until we have valid input
     while (invalid){
-        // mvwprintw(window, cursor++, 1, "top of loop\n");
+        
         //store input
         char orientation[2]; //2 because it's one character and a terminating character
-        // wgetnstr(window, orientation, sizeof(orientation)-1);
         orientation[1]='\0';
-
         orientation[0]=wgetch(window);
+
+        //handle case where user input '/n'
         if(orientation[0]=='\n'){
             cursor++;
             mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
@@ -142,11 +136,12 @@ enum Orientation validOrt(WINDOW * window){
             space = strlen("for horizontal: \n")+3;
             continue;
         }
-        // mvwprintw(window, cursor++, 1, ".%c.", orientation[0]);
+
+        // save next character user entered, because there's at least one, even if it's a '\n'
         char potentialNewline = wgetch(window);
-        // mvwprintw(window, cursor++, 1, ".%c.", potentialNewline);
         bool newline = potentialNewline=='\n';
-        // mvwprintw(window, cursor++, 1, ".%d.", newline);
+
+        //clean up user input 
         while(potentialNewline!='\n'){
             potentialNewline=wgetch(window);
         }
@@ -154,30 +149,16 @@ enum Orientation validOrt(WINDOW * window){
         //print user input (at least the first character) so they can see what they entered
         mvwprintw(window, cursor++, space, "%s", orientation);
 
-        // mvwprintw(window, cursor++, 1, "%d", space);
-        // char extra = fgetc(stdin);
-        //commenting this out because we can't access these values
-        // char extra = wgetch(window);
-        // cursor++;
-        // if(extra != '\n'){
-        //     mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
-        //     mvwprintw(window, cursor++, 3, "for horizontal: \n");
-        //     // while (fgetc(stdin) != '\n');
-        //     while (extra != '\n') {
-        //         extra = wgetch(window) != '\n';
-        //         mvwprintw(window, cursor, 1, &extra);
-        //     }
-
-        //i need to rewrite this to be a while loop that loops until orientation has a terminating character at orientation[1], then check orientation [0]
-        // mvwprintw(window, cursor++, 1, "orientation[1]: %c.\n", orientation[1]);
-
+        //if we have invalid input that was too long
         if(!newline){
             mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
             mvwprintw(window, cursor, 3, "for horizontal: \n");
             space = strlen("for horizontal: \n")+3;
         } else {
-            // mvwprintw(window, cursor++, 1, "in the else\n");
-            //check for valid input and save it into ORT if it's valid, otherwise loop again with an informative message
+            /**
+             * we were given one character of input, so check for valid input and, if valid, save it
+             * into ORT and flip invalid boolean, otherwise loop again with an informative message
+             */
             if (orientation[0] == 'H'){
                 ORT = HORIZONTAL;
                 invalid = false;
@@ -190,7 +171,6 @@ enum Orientation validOrt(WINDOW * window){
                 space = strlen("for horizontal: \n")+3;
             }
         }
-        // mvwprintw(window, cursor++, 1, "I made it through the loop and ORT is %d (if 1 invalid)\n", (ORT==INVALID));
 
     }//while
 
@@ -200,78 +180,106 @@ enum Orientation validOrt(WINDOW * window){
 }//validOrt
 
 
-/**
- * validCoords takes a pointer to a character array that it will fill with the two valid coordinate values
+
+/**validCoords
+ *  validCoords takes a pointer to an int array that it will fill with the two valid coordinate
+ *  values. It also takes the user input window since it deals with user input. Since this input
+ *  is more structured and complicated, most of this function is error checking.
  */
 int * validCoords(int * yay, WINDOW * window){
 
     //use this bool to control the while loop to loop until both coordinate values are valid
-    bool supa = true;
+    bool supa = true; //we used the word valid too much in this method so we picked supa as the bool name
+
+    //save horizontal indentation for cursor 
     int space = strlen("Please input coordinates for the start point of your ship (ex: A,1): ")+1;
 
-    //give user instructions and store their input into coords[]
+    //give user instructions
     mvwprintw(window, cursor, 1, "Please input coordinates for the start point of your ship (ex: A,1): ");
 
     //loop until we have valid input
     while (supa){
+
+        //store user input
         char coords[BUFFERSIZE];
+
+        /**
+         * if we have a 10 as the input numeric value. This case is special because it's a diffent 
+         * number of input characters, so we have to hand it specifically and carefully. This bool
+         * will only be flipped to true if the user input 10 and it was a valid input.
+         */
         bool ten = false;
 
-        // fgets(coords, sizeof(coords), stdin);
+        //for use later in error checking;
+        bool shortInput = false;
+
+        //collect first (up to) three user input characters
         for(int i = 0; i<BUFFERSIZE-1; i++){
             coords[i]=(char)wgetch(window);
-            if(coords[i]=='\n') break;
-            // mvwprintw(window, cursor++, space, "%c\n",coords[i]);
+            if(coords[i]=='\n') {
+                shortInput = true;
+                break;
+            }
         }
-        // mvwprintw(window, cursor++, space, "%d\n", strlen(coords));
-        // wgetnstr(window, coords, sizeof(coords)-1);
         
-        // cursor++;
+        //print user input so they can see what they wrote
         mvwprintw(window, cursor, space, "%s", coords);
-        // printf("coords.: %s.\n",coords);
-        // int len = strlen(coords);
-        // mvwprintw(window, cursor++, 1, "strlen of input: %d\n", len);
-
+        
+        //check if input was too short or improperly formatted
         bool noNewlines = ((coords[0]!='\n')&&(coords[1]!='\n')&&(coords[2]!='\n'));
         bool comma = (coords[1]==',');
-        // mvwprintw(window, cursor++, 1, "coords[3]: %c.", coords[3]);
 
         //ensure valid string length
         if (strlen(coords) == 3 && noNewlines && comma){
             
-            //get the next character- should either be a \n or a 0
+            //get the next character - should either be a \n or a 0 (0 in the case of a 10)
             char next = (char) wgetch(window);
 
             //check for a 10
             if(coords[2]=='1'){
                 
-                // mvwprintw(window, cursor++, space, ".%c.\n", next);
+                /**ensure that if it was a 10, it was input properly, and then print the 0 (and \n for 
+                 * formatting) so the user can see the rest of their input
+                 */ 
                 if((next=='0')&&(((char) wgetch(window))=='\n')){
                     ten = true;
                     mvwprintw(window, cursor++, space+3, "%c\n", next);
                 }else{
+                    //print the \n for formatting
                     mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
                 }
 
+                //if it wasn't a 10 and too long, print informative error message and loop
                 if((next!='\n')&&(!ten)){
+                    
+                    //clean up user input 
                     while(next!='\n'){
                         next=wgetch(window);
                     }
-                    // cursor++;
-                    mvwprintw(window, cursor++, 1, "1Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+
+                    //print error message split over three lines to move our cursor
+                    mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
                     mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number,\n");
                     mvwprintw(window, cursor, 1, " and no spaces! : ");
                     space = strlen("and no spaces! : ")+1;
                     continue;
                 }
             }else{
+            //in this portion, the first input character was not a 1
+
+                //print a newline to match formatting above
                 mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
+
+                //if input was too long, print informative error message and loop
                 if(next!='\n'){
+
+                    //clean up user input
                     while(next!='\n'){
                         next=wgetch(window);
                     }
-                    // cursor++;
-                    mvwprintw(window, cursor++, 1, "2Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+
+                    //print error message split over three lines to move our cursor
+                    mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
                     mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number,\n");
                     mvwprintw(window, cursor, 1, " and no spaces! : ");
                     space = strlen("and no spaces! : ")+1;
@@ -279,7 +287,9 @@ int * validCoords(int * yay, WINDOW * window){
                 }
             }
 
-            //set these for later use
+            //to get to this point, the input in coords must be x,x and there may or may not be a 10 input
+
+            //save these for later use
             char letter = coords[0];
             char number = coords[2];
             bool validL = false;
@@ -296,8 +306,8 @@ int * validCoords(int * yay, WINDOW * window){
                 possibleL++;
             }
 
+            //convert letter to int value
             int intLetter = possibleL - 'A' +1;
-            // printf("Letter %c is %d\n", possibleL, intLetter);
 
             //loop through all possible valid numerical values and break loop if match is found
             for (int i = 0; i < NROWS; i++){
@@ -309,61 +319,74 @@ int * validCoords(int * yay, WINDOW * window){
                 possibleN++;
             }
 
+            //replace n value with 10 if there was a 10 input
             if(ten&&validN) possibleN = 10;
-            // printf("Number%d\n", possibleN);
 
             //if both values are valid, end while loop and store values in string to be returned
             if(validL && validN){
                 supa=false;
                 int validCoordinates[2] = {intLetter, possibleN};
-                // printf("coordinates: %d %d\n", validCoordinates[0], validCoordinates[1]);
                 yay=validCoordinates;
-                // mvwprintw(window, cursor++, 1, "%d %d", yay[0], yay[1]);
                 return yay;
             }
+        }else{
+            //if user didn't have short input
+            if(!shortInput){
+                //get the next character - should either be a \n or garbage since here the input did not match the specifications
+                char next = (char) wgetch(window);
+
+                //clean up user input 
+                while(next!='\n'){
+                    next=wgetch(window);
+                }
+            }
+
+            /**increment cursor from before while loop informative message (and from successive error 
+             * messages that don't increment the cursor) */
+            cursor++;
         }
-        // if(noNewlines){
-        //     char next = wgetch(window);
-        //     while(next!='\n'){
-        //                 next=wgetch(window);
-        //             }
-        // }
-        // cursor++;
-        // if(strlen(coords) == 3 && noNewlines && comma && coords[2]!=1) cursor--;
-        mvwprintw(window, cursor++, 1, "3Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+        
+        //print error message split over three lines to move our cursor
+        mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
         mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number, \n");
         mvwprintw(window, cursor, 1, " and no spaces! : ");
         space = strlen("and no spaces! : ")+1;
     }
+
+    //this point should never be reached
     return NULL;
 } 
 
-/**
- * makeBoard loops through all of the ships and places them on the board. 
- * It returns the initialized board on success and an empty board on failure... but it shouldn't be able to fail.
+
+
+/**makeBoard
+ *  makeBoard takes the input window and the player's board window.
+ *  makeBoard loops through all of the ships from the above shipArray and places them on the board based on
+ *  user input from the helper functions seen above. It returns the initialized board on success and an empty 
+ *  board on failure, but it shouldn't be able to fail.
  */
 board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
-    //make a new board and a proposal ship location
+    //make a new board and pointer to it
     board_t board;
     board_t *boardPtr = malloc((sizeof(cell_t))*(NROWS+1)*(NCOLS+1));
     boardPtr = &board;
     initBoard(boardPtr);
 
-    // printStatus(board);
+    //make a new ship location proposal to be vetted below
     shipLocation_t proposal;
 
-    //loop through the diff types of ships using the ship array
+    //loop through the different types of ships using the ship array.
     for (int i = 0; i < NDIFSHIPS; i++){ 
+        //If any validation checks fail, we will print an error message and restart the current iteration of the loop
 
         //save ship we're on as current
         shipType_t current = shipArray[i]; 
         
         //give user info on which ship we're using 
-        // mvwprintw(window, cursor++, 1, "Current Ship: %s\nShip Length: %d\n", current.name, current.size);
         mvwprintw(window, cursor++, 1, "Current Ship: %s\n", current.name);
         mvwprintw(window, cursor++, 1, "Ship Length: %d\n", current.size);
 
-        //get user to give us their orientation for the ship
+        //prompt user to give us their orientation for the ship and save it in bigO
         enum Orientation bigO = INVALID;
         bigO = validOrt(window); //this will not return until it's a valid orientation.
         if(bigO==INVALID) {
@@ -372,7 +395,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
             continue;
         }
 
-        //get user to give us their starting coordinate for the ship
+        //prompt user to give us their starting coordinates for the ship and save them into coords
         int coords[2] = {0, 0};
         memcpy(coords, validCoords(coords, window), (2* sizeof(int)));
         if(coords[0] == 0 || coords[1]==0) {
@@ -380,7 +403,6 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
             i--;
             continue;
         }
-        // printf("coordinates in makeBoard: %d %d\n", coords[0], coords[1]);
 
         //initialize proposal with valid values
         proposal.orientation = bigO;
@@ -389,12 +411,14 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         proposal.shipType = current;
         proposal.sunk=false;
 
+        //check if proposal shipLocation will cross bounds of board
         if(!(checkBounds(proposal))) {
             mvwprintw(window, cursor++, 1, "INVALID PLACEMENT-- BOUNDARY CROSSING. Restarting this ship placement.\n");
             i--;
             continue;
         }
 
+        //check if proposal shipLocation will overlap with another ship's placement, and if not, update board
         if(checkOverlap(boardPtr, proposal)){
             mvwprintw(window, cursor++, 1, "INVALID PLACEMENT-- OVERLAP. Restarting this ship placement.\n");
             i--;
@@ -408,57 +432,60 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
                     board.array[proposal.startx + i][proposal.starty].occupied = true;
                     board.array[proposal.startx + i][proposal.starty].ship = proposal.shipType;
                 }
-                
             }
-            
         }
+
+        //inform user of success
         mvwprintw(window, cursor++, 1, "Valid ship placement.\n");
        
-        //display the ship on the board
-
-        //give user option to start over
+        //give user option to start board over
         mvwprintw(window, cursor++, 1, "If you would like to reset your board, you may now type in 'R'. Otherwise, hit enter.\n");
         
+        //store input
         char input;
-        // input = fgetc(stdin);
         input = wgetch(window);
-        //wgetnstr(window, input, 2);
 
-
+        //loop until we receive valid input
         while(input != '\n' && input != 'R' && input != 'r'){
             mvwprintw(window, cursor++, 1, "Invalid input: please input R to reset or hit enter to continue.\n");
-            // input = fgetc(stdin);
             input = (char) wgetch(window);
               
         }
 
+        //if user wanted to reset board, wipe the board and reset i to -1 to start the loop all the way over
         if(input == 'R' || input == 'r') {
             board_t cleanBoard;
             initBoard(&cleanBoard);
             memcpy(&board, &cleanBoard, sizeof(cell_t)*121);
-            i = 0;
+            i = -1;
         }
 
-        draw_board(playerWindow, board.array, false);
+        //update player's board screen and clean the input window
+        draw_player_board(playerWindow, board.array);
         werase(window);
         box(window, 0, 0);
         cursor = INIT_CURSOR;
-    
-        //clean the window?
-
-        // printStatus(board);
     }
     
+    //reset cursor to top of box
     cursor = INIT_CURSOR;
+
+    //return initialized box
     return board;
 }
 
-// Function that updates the board based on the player's guess
+
+
+/**updateBoardAfterGuess
+ *  Function that updates the board based on the player's guess
+ *  Takes a board, coordinates, bools giving information about the
+ *  specified cell (to be updated), and the user's input window
+ */
 void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk, WINDOW * window) {
     *isHit = false;     // Initialize hit status as false
     *isSunk = false;    // Initialize sunk status as false
 
-    // Validate coordinates to ensure they are within the bounds
+    // Validate coordinates to ensure they are within bounds and return if not
     if (x < 1 || x > NCOLS || y < 1 || y > NROWS) {
         mvwprintw(window, cursor++, 1, "Invalid coordinates.\n");
         return;
@@ -467,7 +494,7 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
     // Get the cell at the specified coordinates
     cell_t *cell = &board->array[x][y]; // Access the guessed cell
 
-    // Check if the cell has already been guessed
+    // Check if the cell has already been guessed and return if yes
     if (cell->guessed) {
         mvwprintw(window, cursor++, 1, "This cell has already been guessed");
         return;
@@ -478,14 +505,19 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
 
     // Check if the cell is occupied by a ship
     if (cell->occupied) {
+
+        //update booleans
         *isHit = true;
         cell->hit = true;
 
-        // Check if the entire ship has been sunk
+        // Save values for loop to check if the entire ship has been sunk
         shipType_t *ship = &cell->ship;
         bool allCellsHit = true;
 
-        // Scan the board for any remaining parts of this ship
+        /**
+         * Scan the board for any remaining parts of this ship and flip allCellsHit 
+         * if we find an un-hit cell from the same ship
+         */ 
         for (int i = 1; i < NROWS+1; i++) {
             for (int j = 1; j < NCOLS+1; j++) {
                 if (board->array[i][j].occupied && board->array[i][j].ship.name == ship->name
@@ -497,19 +529,24 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
             if (!allCellsHit) break;
         }
 
-        // If all parts of the ship are hit, it is sunk
+        // If all parts of the ship are hit, it is sunk, so update that boolean
         if (allCellsHit) {
             *isSunk = true;
             mvwprintw(window, cursor++, 1, "You sunk a %s", ship->name);
         }
+
     } else {
         // If the cell is not occupied, it's a miss
         mvwprintw(window, cursor++, 1, "Miss!\n");
     }
 }
 
-// Function that iterates through all cells on the board, checking for any unsunk ship parts.
-//      If any cell is occupied by a ship and not marked as hit, the game is not over
+
+
+/**checkVictory
+ *  Function that iterates through all cells on the board, checking for any unsunk ship parts.
+ *  If any cell is occupied by a ship and not marked as hit, the game is not over
+ */
 bool checkVictory(board_t *board) {
     // Iterate through ever cell on the board
     for (int i = 1; i < NROWS+1; i++) {
@@ -524,7 +561,12 @@ bool checkVictory(board_t *board) {
     return true;    // All ship parts are sunk
 }
 
-// Function that initializes a players game board
+
+
+/**initBoard
+ *  Function that initializes a players game board by setting every cell to unoccupied, not 
+ *  guessed, and not hit
+ */
 void initBoard(board_t *board) {
     // Iterate through each row and column
     for (int i = 1; i < NROWS+1; i++) {
@@ -539,6 +581,10 @@ void initBoard(board_t *board) {
 }
 
 
+
+/**printStatus
+ *  used by us during debugging to print the occupation status of each cell
+ */
 void printStatus(board_t board, WINDOW * window){
     for (int i = 1; i < NROWS+1; i++){
         for (int j = 1; j < NROWS+1; j++){
@@ -546,12 +592,16 @@ void printStatus(board_t board, WINDOW * window){
         }
     }
 }
+
+
+
 /* Whats next?
 
 * users place ships on board, save ship location
 * set of seperate ships for each user 
-* update board after guesses
+* update board after guesses does not in fact update the game board
 
 * we could have a thread keeping track of cursor and if it's updated to be equal to the edge of the window we could reset it to INIT_CURSOR
+* handle input such as backspaces to not count as characters..this is an eventually thing not an immediately thing
 
 */
