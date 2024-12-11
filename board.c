@@ -395,7 +395,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
 
         //prompt user to give us their starting coordinates for the ship and save them into coords
         int coords[2] = {0, 0};
-        memcpy(coords, validCoords(coords, window, "Please input coordinates for the start point of your ship (ex: A,1): "), (2* sizeof(int)));
+        memcpy(coords, validCoords(coords, window, "Please input coordinates for the start point of your ship (ex: A,1): \0"), (2* sizeof(int)));
         if(coords[0] == 0 || coords[1]==0) {
             mvwprintw(window, cursor++, 1, "INVALID COORDINATES. Restarting this ship placement.\n");
             i--;
@@ -583,7 +583,6 @@ void initBoard(board_t *board) {
 }
 
 
-
 /**printStatus
  *  used by us during debugging to print the occupation status of each cell
  */
@@ -594,3 +593,32 @@ void printStatus(board_t board, WINDOW * window){
         }
     }
 }
+
+
+
+/**hitOrMiss
+ * takes an int array containing coordinates and a board, returns "HIT" if 
+ * the cell specified is occupied and hasn't yet been guessed, "GUESSED" if
+ * the cell specified has been guessed, and "MISS" if it's unoccupied and 
+ * unguessed.
+ * Assumptions: coordinates are valid and order is x,y and board is initialized, and a 10 is sent in as a 0
+ */
+char * hitOrMiss(int attackCoordsArray[2], board_t * board){
+
+    //save specified cell
+    cell_t cell = board->array[attackCoordsArray[0]][attackCoordsArray[1]];
+
+    //if cell has already been guessed
+    if(cell.guessed) return "GUESSED";
+    
+    /*at this point, our cell has not been guessed, so return hit if occupied and 
+    miss otherwise, and update cell status accordingly*/
+    cell.guessed=true;
+    if(cell.occupied){
+        cell.hit = true;
+        return "HIT";
+    } else {
+        return "MISS";
+    }
+}
+
