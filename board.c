@@ -193,7 +193,7 @@ int * validCoords(int * yay, WINDOW * window, char * prompt){
     int space = strlen(prompt)+1;
 
     //give user instructions
-    mvwprintw(window, cursor, 1, prompt);
+    mvwprintw(window, cursor, 1, "%s", prompt);
 
     //loop until we have valid input
     while (supa){
@@ -603,7 +603,7 @@ void printStatus(board_t board, WINDOW * window){
  * unguessed.
  * Assumptions: coordinates are valid and order is x,y and board is initialized, and a 10 is sent in as a 0
  */
-char * hitOrMiss(int attackCoordsArray[2], board_t * board){
+char * hitOrMiss(int attackCoordsArray[], board_t * board){
 
     //save specified cell
     cell_t cell = board->array[attackCoordsArray[0]][attackCoordsArray[1]];
