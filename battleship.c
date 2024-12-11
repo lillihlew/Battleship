@@ -126,14 +126,16 @@ void run_server(unsigned short port) {
         y = attack_coords[1];  // Column index
 
         // Send attack to Player 2
-        char attack_message[16];
-        snprintf(attack_message, sizeof(attack_message), "%d,%d", x, y);
-        send_message(client_socket_fd, attack_message);
+        // char attack_message[16];
+        snprintf(attack_coords, sizeof(attack_coords), "%d,%d", x, y);
+        send_message(client_socket_fd, attack_coords);
 
         // Receive attack result
-        char* attack_result = receive_message(client_socket_fd);
+        char* attack_result = "INVALID";
+        char* p2_attack = receive_message(client_socket_fd);
+        attack_result = hitOrMiss(p2_attack, player2_board);
         mvwprintw(prompt_win, 1, 1, "Player 2: %s\n", attack_result);
-        wrefresh(prompt_win);
+        // wrefresh(prompt_win);
 
         // Update the opponent's board window with the result
         if (strcmp(attack_result, "HIT") == 0) {
@@ -282,22 +284,25 @@ void run_client(char* server_name, unsigned short port) {
             break;
         }
 
+
         // Player 2's turn
         mvwprintw(prompt_win, 1, 1, "**Enter attack coordinates (e.g., A,1): ");
         wrefresh(prompt_win);
-        validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): ");
+        validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): \0");
         x = attack_coords[0];
         y = attack_coords[1];
-
+        
         // Send attack to Player 1
-        char attack_message[16];
-        snprintf(attack_message, sizeof(attack_message), "%d,%d", x, y);
-        send_message(socket_fd, attack_message);
+        // char attack_message[16];
+        snprintf(attack_coords, sizeof(attack_coords), "%d,%d", x, y);
+        send_message(socket_fd, attack_coords);
 
         // Receive attack result
-        char* attack_result = receive_message(socket_fd);
+        char* attack_result = "INVALID";
+        char* p1_attack = receive_message(socket_fd);
+        attack_result = hitOrMiss(p1_attack, player1_board);
         mvwprintw(prompt_win, 1, 1, "Player 1: %s\n", attack_result);
-        wrefresh(prompt_win);
+        // wrefresh(prompt_win);
 
         // Update the opponent's board window with the result
         if (strcmp(attack_result, "HIT") == 0) {
