@@ -199,7 +199,7 @@ int * validCoords(int * yay, WINDOW * window, char * prompt){
     while (supa){
 
         //store user input
-        char coords[BUFFERSIZE];
+        char coords[BUFFERSIZE+1];
 
         /**
          * if we have a 10 as the input numeric value. This case is special because it's a diffent 
@@ -216,13 +216,16 @@ int * validCoords(int * yay, WINDOW * window, char * prompt){
             coords[i]=(char)wgetch(window);
             if(coords[i]=='\n') {
                 shortInput = true;
+                coords[i+1] = '\0';
                 break;
+            } else {
+                coords[BUFFERSIZE] = '\0';
             }
         }
         
         //print user input so they can see what they wrote
-        mvwprintw(window, cursor, space, "%s", coords);
-        
+        mvwprintw(window, cursor, space, "%c%c%c", coords[0], coords[1], coords[2]);
+    
         //check if input was too short or improperly formatted
         bool noNewlines = ((coords[0]!='\n')&&(coords[1]!='\n')&&(coords[2]!='\n'));
         bool comma = (coords[1]==',');

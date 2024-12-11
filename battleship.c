@@ -137,8 +137,10 @@ void run_server(unsigned short port) {
         for (int i = 0; i < 2; i++){
             if (attack_coords[i] == 10){
                 attack_coords_char[i] = '0'; 
+                printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
             } else {
                 attack_coords_char[i] = attack_coords[i] + '0';
+                printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
             }    
         }
 
@@ -158,8 +160,10 @@ void run_server(unsigned short port) {
         for (int i = 0; i < sizeof(p2_attack); i++){
             if (p2_attack_int[i] == '0'){
                 p2_attack[i] = 10;
+                printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
             } else {
                 p2_attack_int[i] = p2_attack[i] - '0';
+                printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
             }
             
         }
@@ -332,8 +336,10 @@ void run_client(char* server_name, unsigned short port) {
         for (int i = 0; i < 2; i++){
             if (attack_coords[i] == 10){
                 attack_coords_char[i] = '0'; 
+                printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
             } else {
                 attack_coords_char[i] = attack_coords[i] + '0';
+                printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
             }    
         }
 
@@ -355,8 +361,10 @@ void run_client(char* server_name, unsigned short port) {
         for (int i = 0; i < sizeof(p1_attack); i++){
             if (p1_attack_int[i] == '0'){
                 p1_attack[i] = 10;
+                printf("Int Version: %d\n Char Version: %c\n",p1_attack_int[i], p1_attack[i]);
             } else {
                 p1_attack_int[i] = p1_attack[i] - '0';
+                printf("Int Version: %d\n Char Version: %c\n",p1_attack_int[i], p1_attack[i]);
             }
         }
 
