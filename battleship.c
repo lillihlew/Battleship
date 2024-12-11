@@ -127,10 +127,10 @@ void run_server(unsigned short port) {
 
         // Send attack to Player 2
         // char attack_message[16];
-        snprintf(attack_coords, sizeof(attack_coords), "%d,%d", x, y);
+        
 
         //make an array to store char values
-        char * attack_coords_char[3];
+        char attack_coords_char[3];
 
         //loop through attack_coords, if the coord is a 10 make it the 0 char in attack_chords_char, else make it its ascii rep
         for (int i = 0; i < 2; i++){
@@ -141,7 +141,8 @@ void run_server(unsigned short port) {
             }    
         }
 
-        attack_coords_char[3] == '\0';
+        attack_coords_char[2] = '\0';
+        snprintf(attack_coords_char, 2, "%c,%c", x, y);
         send_message(client_socket_fd, attack_coords_char);
 
         // Receive attack result
@@ -150,7 +151,7 @@ void run_server(unsigned short port) {
         char* p2_attack = receive_message(client_socket_fd);
 
         //int array to convert from char to int
-        int * p2_attack_int[sizeof(p2_attack)];
+        int  p2_attack_int[sizeof(p2_attack)];
 
         //loop through p2_attack checking if its 
         for (int i = 0; i < sizeof(p2_attack); i++){
@@ -162,7 +163,7 @@ void run_server(unsigned short port) {
             
         }
         
-        attack_result = hitOrMiss(p2_attack_int, player2_board);
+        attack_result = hitOrMiss(p2_attack_int, &player2_board);
         mvwprintw(prompt_win, 1, 1, "Player 2: %s\n", attack_result);
         // wrefresh(prompt_win);
 
@@ -322,7 +323,7 @@ void run_client(char* server_name, unsigned short port) {
         y = attack_coords[1];
 
         //make an array to store char values
-        char * attack_coords_char[3];
+        char  attack_coords_char[3];
 
         //loop through attack_coords, if the coord is a 10 make it the 0 char in attack_chords_char, else make it its ascii rep
         for (int i = 0; i < 2; i++){
@@ -333,11 +334,11 @@ void run_client(char* server_name, unsigned short port) {
             }    
         }
 
-        attack_coords_char[3] == '\0';
+        attack_coords_char[2] = '\0';
         
         // Send attack to Player 1
         // char attack_message[16];
-        snprintf(attack_coords, sizeof(attack_coords), "%d,%d", x, y);
+        snprintf(attack_coords_char, 2, "%d,%d", x, y);
         send_message(socket_fd, attack_coords_char);
 
         // Receive attack result
@@ -345,7 +346,7 @@ void run_client(char* server_name, unsigned short port) {
         char* p1_attack = receive_message(socket_fd);
 
         //int array to convert from char to int
-        int * p1_attack_int[sizeof(p1_attack)];
+        int p1_attack_int[sizeof(p1_attack)];
 
         //loop through p2_attack checking if its 
         for (int i = 0; i < sizeof(p1_attack); i++){
@@ -356,8 +357,8 @@ void run_client(char* server_name, unsigned short port) {
             }
         }
 
-        
-        attack_result = hitOrMiss(p1_attack, player1_board);
+
+        attack_result = hitOrMiss(p1_attack_int, &player1_board);
         mvwprintw(prompt_win, 1, 1, "Player 1: %s\n", attack_result);
         // wrefresh(prompt_win);
 
