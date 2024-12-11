@@ -131,9 +131,29 @@ enum Orientation validOrt(WINDOW * window){
         // mvwprintw(window, cursor++, 1, "top of loop\n");
         //store input
         char orientation[2]; //2 because it's one character and a terminating character
-        wgetnstr(window, orientation, sizeof(orientation)-1);
+        // wgetnstr(window, orientation, sizeof(orientation)-1);
+        orientation[1]='\0';
+
+        orientation[0]=wgetch(window);
+        if(orientation[0]=='\n'){
+            cursor++;
+            mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
+            mvwprintw(window, cursor, 3, "for horizontal: \n");
+            space = strlen("for horizontal: \n")+3;
+            continue;
+        }
+        // mvwprintw(window, cursor++, 1, ".%c.", orientation[0]);
+        char potentialNewline = wgetch(window);
+        // mvwprintw(window, cursor++, 1, ".%c.", potentialNewline);
+        bool newline = potentialNewline=='\n';
+        // mvwprintw(window, cursor++, 1, ".%d.", newline);
+        while(potentialNewline!='\n'){
+            potentialNewline=wgetch(window);
+        }
+
         //print user input (at least the first character) so they can see what they entered
         mvwprintw(window, cursor++, space, "%s", orientation);
+
         // mvwprintw(window, cursor++, 1, "%d", space);
         // char extra = fgetc(stdin);
         //commenting this out because we can't access these values
@@ -151,7 +171,7 @@ enum Orientation validOrt(WINDOW * window){
         //i need to rewrite this to be a while loop that loops until orientation has a terminating character at orientation[1], then check orientation [0]
         // mvwprintw(window, cursor++, 1, "orientation[1]: %c.\n", orientation[1]);
 
-        if(orientation[1]!='\0'){
+        if(!newline){
             mvwprintw(window, cursor++, 1, "Invalid orientation, try again. Please enter 'V' for vertical or 'H' \n");
             mvwprintw(window, cursor, 3, "for horizontal: \n");
             space = strlen("for horizontal: \n")+3;
@@ -234,26 +254,28 @@ int * validCoords(int * yay, WINDOW * window){
                 }
 
                 if((next!='\n')&&(!ten)){
-                    cursor++;
-                    mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+                    while(next!='\n'){
+                        next=wgetch(window);
+                    }
+                    // cursor++;
+                    mvwprintw(window, cursor++, 1, "1Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
                     mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number,\n");
                     mvwprintw(window, cursor, 1, " and no spaces! : ");
                     space = strlen("and no spaces! : ")+1;
                     continue;
-                }else{
-                    // mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
                 }
             }else{
                 mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
                 if(next!='\n'){
-                    cursor++;
-                    mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+                    while(next!='\n'){
+                        next=wgetch(window);
+                    }
+                    // cursor++;
+                    mvwprintw(window, cursor++, 1, "2Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
                     mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number,\n");
                     mvwprintw(window, cursor, 1, " and no spaces! : ");
                     space = strlen("and no spaces! : ")+1;
                     continue;
-                }else{
-                    mvwprintw(window, cursor++, space+sizeof(coords)+1, "\n");
                 }
             }
 
@@ -299,9 +321,16 @@ int * validCoords(int * yay, WINDOW * window){
                 // mvwprintw(window, cursor++, 1, "%d %d", yay[0], yay[1]);
                 return yay;
             }
-        } 
-        cursor++;
-        mvwprintw(window, cursor++, 1, "Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
+        }
+        // if(noNewlines){
+        //     char next = wgetch(window);
+        //     while(next!='\n'){
+        //                 next=wgetch(window);
+        //             }
+        // }
+        // cursor++;
+        // if(strlen(coords) == 3 && noNewlines && comma && coords[2]!=1) cursor--;
+        mvwprintw(window, cursor++, 1, "3Invalid input. Try again. Remember, the format is LETTER,NUMBER\n");
         mvwprintw(window, cursor++, 1, " with a capital letter, a comma between the letter and number, \n");
         mvwprintw(window, cursor, 1, " and no spaces! : ");
         space = strlen("and no spaces! : ")+1;
