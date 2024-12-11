@@ -69,8 +69,6 @@ void run_server(unsigned short port) {
 
     printf("Player 2 connected!\n");
     sleep(1);
-    printf("Game Loading. Please fullscreen your terminal."); 
-    sleep(5);
 
     // Initialize curses for graphics
     init_curses();
@@ -95,7 +93,7 @@ void run_server(unsigned short port) {
     // memcpy(&player1_board, &(makeBoard(prompt_win)), ((sizeof(cell_t))*(NROWS+1)*(NCOLS+1)));
 
     // Update the player's board window
-    draw_board(player_win, player1_board.array, false);
+    draw_player_board(player_win, player1_board.array);
 
     // Notify the client that the server is ready
     send_message(client_socket_fd, "READY");
@@ -142,7 +140,7 @@ void run_server(unsigned short port) {
         } else if (strcmp(attack_result, "MISS") == 0) {
             player2_board.array[x][y].guessed = true;
         }
-        draw_board(opponent_win, player2_board.array, true);
+        draw_opponent_board(opponent_win, player2_board.array);
         free(attack_result);
 
         // Check if Player 1 won
@@ -172,7 +170,7 @@ void run_server(unsigned short port) {
         send_message(client_socket_fd, result_message);
 
         // Update the player's board window with the result
-        draw_board(player_win, player1_board.array, false);
+        draw_player_board(player_win, player1_board.array);
 
         // Check if Player 2 won
         if (checkVictory(&player1_board)) {
@@ -206,8 +204,6 @@ void run_client(char* server_name, unsigned short port) {
 
     printf("Connected to Player 1!\n");
     sleep(1);
-    printf("Game Loading. Please fullscreen your terminal."); 
-    sleep(5);
 
     // Initialize curses for graphics
     init_curses();
@@ -232,7 +228,7 @@ void run_client(char* server_name, unsigned short port) {
     player2_board = makeBoard(prompt_win, player_win);
 
     // Update the player's board window
-    draw_board(player_win, player2_board.array, false);
+    draw_player_board(player_win, player2_board.array);
 
     // Notify the server that the client is ready
     send_message(socket_fd, "READY");
@@ -274,7 +270,7 @@ void run_client(char* server_name, unsigned short port) {
         send_message(socket_fd, result_message);
 
         // Update the player's board window with the result
-        draw_board(player_win, player2_board.array, false);
+        draw_player_board(player_win, player2_board.array);
 
         // Check if Player 1 won
         if (checkVictory(&player2_board)) {
@@ -308,7 +304,7 @@ void run_client(char* server_name, unsigned short port) {
         } else if (strcmp(attack_result, "MISS") == 0) {
             player1_board.array[x][y].guessed = true;
         }
-        draw_board(opponent_win, player1_board.array, true);
+        draw_opponent_board(opponent_win, player1_board.array);
         free(attack_result);
 
         // Check if Player 2 won

@@ -28,13 +28,20 @@ void init_curses();
 WINDOW* create_board_window(int start_x, int start_y, const char* title);
 
 /**
- * Draws the game board for a player or opponent in the given window.
- * 
- * @param win        The window where the board will be drawn.
- * @param board      The 10x10 game board array to display.
- * @param hide_ships If true, hides the ships from view (used for opponent's board).
+ * Draws the player's board, showing ships and their current state.
+ *
+ * @param win   The window where the board will be drawn.
+ * @param board The player's game board array.
  */
-void draw_board(WINDOW* win, cell_t board[NROWS+1][NCOLS+1], bool hide_ships);
+void draw_player_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]);
+
+/**
+ * Draws the opponent's board, hiding ships and showing only guesses.
+ *
+ * @param win   The window where the board will be drawn.
+ * @param board The opponent's game board array.
+ */
+void draw_opponent_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]);
 
 /**
  * Creates a new window to display prompts and handle user input.
