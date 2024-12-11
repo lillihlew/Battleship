@@ -5,6 +5,8 @@
 #include "battleship.h"
 
 int main(int argc, char *argv[]) {
+    // echo();
+    
     // Validate command-line arguments
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <role> [<server_name> <port>]\n", argv[0]);
@@ -119,7 +121,7 @@ void run_server(unsigned short port) {
         // Player 1's turn
         mvwprintw(prompt_win, 1, 1, "Enter attack coordinates (e.g., A,1): ");
         wrefresh(prompt_win);
-        validCoords(attack_coords, prompt_win);
+        validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): ");
         x = attack_coords[0];  // Row index
         y = attack_coords[1];  // Column index
 
@@ -283,7 +285,7 @@ void run_client(char* server_name, unsigned short port) {
         // Player 2's turn
         mvwprintw(prompt_win, 1, 1, "**Enter attack coordinates (e.g., A,1): ");
         wrefresh(prompt_win);
-        validCoords(attack_coords, prompt_win);
+        validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): ");
         x = attack_coords[0];
         y = attack_coords[1];
 

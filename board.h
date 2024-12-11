@@ -66,7 +66,7 @@ bool checkOverlap(board_t * board, struct shipLocation proposal);
 
 enum Orientation validOrt(WINDOW * window);
 
-int* validCoords(int * yay, WINDOW * window);
+int* validCoords(int * yay, WINDOW * window, char * prompt);
 
 board_t makeBoard(WINDOW * window, WINDOW * playerWindow);
 

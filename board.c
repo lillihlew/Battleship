@@ -18,8 +18,6 @@ const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cr
 //track where the cursor is
 size_t cursor = INIT_CURSOR;
 
-
-
 /**checkBounds
  *  checkBounds takes a player's proposal shipLocation (including origin, size, 
  *  and orientation) and returns true if the boundaries for the proposed ship 
@@ -186,16 +184,16 @@ enum Orientation validOrt(WINDOW * window){
  *  values. It also takes the user input window since it deals with user input. Since this input
  *  is more structured and complicated, most of this function is error checking.
  */
-int * validCoords(int * yay, WINDOW * window){
+int * validCoords(int * yay, WINDOW * window, char * prompt){
 
     //use this bool to control the while loop to loop until both coordinate values are valid
     bool supa = true; //we used the word valid too much in this method so we picked supa as the bool name
 
     //save horizontal indentation for cursor 
-    int space = strlen("Please input coordinates for the start point of your ship (ex: A,1): ")+1;
+    int space = strlen(prompt)+1;
 
     //give user instructions
-    mvwprintw(window, cursor, 1, "Please input coordinates for the start point of your ship (ex: A,1): ");
+    mvwprintw(window, cursor, 1, prompt);
 
     //loop until we have valid input
     while (supa){
@@ -368,9 +366,9 @@ int * validCoords(int * yay, WINDOW * window){
 board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
     //make a new board and pointer to it
     board_t board;
-    board_t *boardPtr = malloc((sizeof(cell_t))*(NROWS+1)*(NCOLS+1));
-    boardPtr = &board;
-    initBoard(boardPtr);
+    // board_t *boardPtr = malloc((sizeof(cell_t))*(NROWS+1)*(NCOLS+1));
+    // boardPtr = &board;
+    initBoard(&board);
 
     //make a new ship location proposal to be vetted below
     shipLocation_t proposal;
@@ -397,7 +395,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
 
         //prompt user to give us their starting coordinates for the ship and save them into coords
         int coords[2] = {0, 0};
-        memcpy(coords, validCoords(coords, window), (2* sizeof(int)));
+        memcpy(coords, validCoords(coords, window, "Please input coordinates for the start point of your ship (ex: A,1): "), (2* sizeof(int)));
         if(coords[0] == 0 || coords[1]==0) {
             mvwprintw(window, cursor++, 1, "INVALID COORDINATES. Restarting this ship placement.\n");
             i--;
@@ -419,7 +417,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         }
 
         //check if proposal shipLocation will overlap with another ship's placement, and if not, update board
-        if(checkOverlap(boardPtr, proposal)){
+        if(checkOverlap(&board, proposal)){
             mvwprintw(window, cursor++, 1, "INVALID PLACEMENT-- OVERLAP. Restarting this ship placement.\n");
             i--;
             continue;
@@ -447,9 +445,9 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
 
         //loop until we receive valid input
         while(input != '\n' && input != 'R' && input != 'r'){
-            mvwprintw(window, cursor++, 1, "Invalid input: please input R to reset or hit enter to continue.\n");
+            mvwprintw(window, cursor, 1, "Invalid input: please input R to reset or hit enter to continue: ");
             input = (char) wgetch(window);
-              
+            mvwprintw(window, cursor++, strlen("Invalid input: please input R to reset or hit enter to continue: ")+1, ": %c\n", input);
         }
 
         //if user wanted to reset board, wipe the board and reset i to -1 to start the loop all the way over
@@ -465,8 +463,13 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         werase(window);
         box(window, 0, 0);
         cursor = INIT_CURSOR;
-    }
+
+        mvwprintw(window, cursor++, 1, "iteration %d complete\n", i);
+    }    
     
+    //print exit message
+    mvwprintw(window, cursor++, 1, "Game initialized, enjoy the game!\n");
+
     //reset cursor to top of box
     cursor = INIT_CURSOR;
 
@@ -572,7 +575,6 @@ void initBoard(board_t *board) {
     for (int i = 1; i < NROWS+1; i++) {
         for (int j = 1; j < NCOLS+1; j++) {
             // Access each cell and reset its properties
-            
             board->array[i][j].occupied = false;    // No ship places
             board->array[i][j].guessed = false;     // Not guessed yet
             board->array[i][j].hit = false;     // Not hit yet
@@ -592,16 +594,3 @@ void printStatus(board_t board, WINDOW * window){
         }
     }
 }
-
-
-
-/* Whats next?
-
-* users place ships on board, save ship location
-* set of seperate ships for each user 
-* update board after guesses does not in fact update the game board
-
-* we could have a thread keeping track of cursor and if it's updated to be equal to the edge of the window we could reset it to INIT_CURSOR
-* handle input such as backspaces to not count as characters..this is an eventually thing not an immediately thing
-
-*/
