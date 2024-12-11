@@ -69,4 +69,4 @@ int* validCoords(int * yay, WINDOW * window, char * prompt);
 
 board_t makeBoard(WINDOW * window, WINDOW * playerWindow);
 
-char * hitOrMiss(int attackCoordsArray[], board_t * board);
+char * hitOrMiss(int attackCoordsArray[2], board_t * board);
