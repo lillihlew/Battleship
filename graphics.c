@@ -46,15 +46,15 @@ WINDOW* create_board_window(int start_x, int start_y, const char* title) {
  * @param hide_ships If true, hides the ships from view (used for opponent's board).
  */
 void draw_board(WINDOW* win, cell_t board[NROWS+1][NCOLS+1], bool hide_ships) {
-    for (int x = 1; x < NROWS + 1; x++) {
-        for (int y = 1; y < NCOLS + 1; y++) {
+    for (int y = 1; y < NROWS + 1; y++) {
+        for (int x = 1; x < NCOLS + 1; x++) {
             char symbol = '~'; // Default empty cell
             if (board[x][y].guessed) {
                 symbol = board[x][y].hit ? 'H' : 'M'; // Hit or Miss
             } else if (!hide_ships && board[x][y].occupied) {
                 symbol = 'S'; // Display ship if not hidden
             }
-            mvwprintw(win, x + 1, y * 2, "%c", symbol); // Adjust cell spacing
+            mvwprintw(win, y + 1, x * 2, "%c", symbol); // Adjust cell spacing
         }
     }
     wrefresh(win);

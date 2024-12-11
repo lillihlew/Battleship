@@ -372,7 +372,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
             continue;
         } else {
             for (int i = 0; i < proposal.shipType.size; i++){
-                if (bigO == HORIZONTAL){
+                if (bigO == VERTICAL){
                     board.array[proposal.startx][proposal.starty + i].occupied = true;
                     board.array[proposal.startx][proposal.starty + i].ship = proposal.shipType;
                 } else {
