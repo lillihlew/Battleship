@@ -109,8 +109,9 @@ void run_server(unsigned short port) {
         close(server_socket_fd);
         end_curses();
         exit(EXIT_FAILURE);
+    }else{
+        free(message);
     }
-    free(message);
 
     // Main game loop
     bool game_running = true;
@@ -163,6 +164,7 @@ void run_server(unsigned short port) {
             
         }
         
+        free(p2_attack);
         attack_result = hitOrMiss(p2_attack_int, &player2_board);
         mvwprintw(prompt_win, 1, 1, "Player 2: %s\n", attack_result);
         // wrefresh(prompt_win);
@@ -175,7 +177,7 @@ void run_server(unsigned short port) {
             player2_board.array[x][y].guessed = true;
         }
         draw_opponent_board(opponent_win, player2_board.array);
-        free(attack_result);
+        // free(attack_result);
 
         // Check if Player 1 won
         if (checkVictory(&player2_board)) {
@@ -276,8 +278,9 @@ void run_client(char* server_name, unsigned short port) {
         close(socket_fd);
         end_curses();
         exit(EXIT_FAILURE);
+    }else{
+        free(message);
     }
-    free(message);
 
     // Main game loop
     bool game_running = true;
@@ -357,7 +360,7 @@ void run_client(char* server_name, unsigned short port) {
             }
         }
 
-
+        free(p1_attack);
         attack_result = hitOrMiss(p1_attack_int, &player1_board);
         mvwprintw(prompt_win, 1, 1, "Player 1: %s\n", attack_result);
         // wrefresh(prompt_win);
@@ -370,7 +373,7 @@ void run_client(char* server_name, unsigned short port) {
             player1_board.array[x][y].guessed = true;
         }
         draw_opponent_board(opponent_win, player1_board.array);
-        free(attack_result);
+        // free(attack_result);
 
         // Check if Player 2 won
         if (checkVictory(&player1_board)) {

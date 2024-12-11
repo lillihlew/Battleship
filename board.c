@@ -463,12 +463,10 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         werase(window);
         box(window, 0, 0);
         cursor = INIT_CURSOR;
-
-        mvwprintw(window, cursor++, 1, "iteration %d complete\n", i);
-    }    
+    }
     
     //print exit message
-    mvwprintw(window, cursor++, 1, "Game initialized, enjoy the game!\n");
+    mvwprintw(window, 1, 1, "Board setup complete, enjoy the game!\n");
 
     //reset cursor to top of box
     cursor = INIT_CURSOR;
