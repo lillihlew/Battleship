@@ -119,7 +119,7 @@ void run_server(unsigned short port) {
         int x, y;
 
         // Player 1's turn
-        mvwprintw(prompt_win, 1, 1, "Enter attack coordinates (e.g., A,1): ");
+        //mvwprintw(prompt_win, 1, 1, "Enter attack coordinates (e.g., A,1): ");
         wrefresh(prompt_win);
         validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): ");
         x = attack_coords[0];  // Row index
@@ -128,12 +128,41 @@ void run_server(unsigned short port) {
         // Send attack to Player 2
         // char attack_message[16];
         snprintf(attack_coords, sizeof(attack_coords), "%d,%d", x, y);
-        send_message(client_socket_fd, attack_coords);
+
+        //make an array to store char values
+        char * attack_coords_char[3];
+
+        //loop through attack_coords, if the coord is a 10 make it the 0 char in attack_chords_char, else make it its ascii rep
+        for (int i = 0; i < 2; i++){
+            if (attack_coords[i] == 10){
+                attack_coords_char[i] = '0'; 
+            } else {
+                attack_coords_char[i] = attack_coords[i] + '0';
+            }    
+        }
+
+        attack_coords_char[3] == '\0';
+        send_message(client_socket_fd, attack_coords_char);
 
         // Receive attack result
         char* attack_result = "INVALID";
+
         char* p2_attack = receive_message(client_socket_fd);
-        attack_result = hitOrMiss(p2_attack, player2_board);
+
+        //int array to convert from char to int
+        int * p2_attack_int[sizeof(p2_attack)];
+
+        //loop through p2_attack checking if its 
+        for (int i = 0; i < sizeof(p2_attack); i++){
+            if (p2_attack_int[i] == '0'){
+                p2_attack[i] = 10;
+            } else {
+                p2_attack_int[i] = p2_attack[i] - '0';
+            }
+            
+        }
+        
+        attack_result = hitOrMiss(p2_attack_int, player2_board);
         mvwprintw(prompt_win, 1, 1, "Player 2: %s\n", attack_result);
         // wrefresh(prompt_win);
 
@@ -286,20 +315,48 @@ void run_client(char* server_name, unsigned short port) {
 
 
         // Player 2's turn
-        mvwprintw(prompt_win, 1, 1, "**Enter attack coordinates (e.g., A,1): ");
+        //mvwprintw(prompt_win, 1, 1, "**Enter attack coordinates (e.g., A,1): ");
         wrefresh(prompt_win);
         validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): \0");
         x = attack_coords[0];
         y = attack_coords[1];
+
+        //make an array to store char values
+        char * attack_coords_char[3];
+
+        //loop through attack_coords, if the coord is a 10 make it the 0 char in attack_chords_char, else make it its ascii rep
+        for (int i = 0; i < 2; i++){
+            if (attack_coords[i] == 10){
+                attack_coords_char[i] = '0'; 
+            } else {
+                attack_coords_char[i] = attack_coords[i] + '0';
+            }    
+        }
+
+        attack_coords_char[3] == '\0';
         
         // Send attack to Player 1
         // char attack_message[16];
         snprintf(attack_coords, sizeof(attack_coords), "%d,%d", x, y);
-        send_message(socket_fd, attack_coords);
+        send_message(socket_fd, attack_coords_char);
 
         // Receive attack result
         char* attack_result = "INVALID";
         char* p1_attack = receive_message(socket_fd);
+
+        //int array to convert from char to int
+        int * p1_attack_int[sizeof(p1_attack)];
+
+        //loop through p2_attack checking if its 
+        for (int i = 0; i < sizeof(p1_attack); i++){
+            if (p1_attack_int[i] == '0'){
+                p1_attack[i] = 10;
+            } else {
+                p1_attack_int[i] = p1_attack[i] - '0';
+            }
+        }
+
+        
         attack_result = hitOrMiss(p1_attack, player1_board);
         mvwprintw(prompt_win, 1, 1, "Player 1: %s\n", attack_result);
         // wrefresh(prompt_win);
