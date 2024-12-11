@@ -431,7 +431,7 @@ void welcome_message(WINDOW* prompt_win) {
 
 
 /**
- * Function that checks to see if at any point the player enters either 'quit' or 'exit' at any point during input prompts,
+ * Function that checks to see if at any point the player enters 'Q' at any point during input prompts,
  *      the game will exit normally.
  * 
  * @param prompt_win    The curses window for displaying prompts
@@ -441,10 +441,6 @@ void welcome_message(WINDOW* prompt_win) {
  * @param socket_fd     Socket sending the quit message
  */
 void player_leave(WINDOW* prompt_win, char* input, const char* leave_player, const char* oppo_player, int socket_fd) {
-    // Display the prompt
-    mvwprintw(prompt_win, 1, 1, "Enter input (or type 'quit'/'exit' to leave): ");
-    wrefresh(prompt_win);
-
     // Read input from the user in the prompt window
     wgetnstr(prompt_win, input, 256); // 256 is just the buffer size
 
@@ -454,8 +450,8 @@ void player_leave(WINDOW* prompt_win, char* input, const char* leave_player, con
         input[len - 1] = '\0';
     }
 
-    // Check if the input is 'quit' or 'exit'
-    if (strcasecmp(input, "exit") == 0 || strcasecmp(input, "quit") == 0) {
+    // Check if the input is 'Q'
+    if (strcasecmp(input, "Q") == 0) {
         // Ask the user for confirmation
         wclear(prompt_win);
         mvwprintw(prompt_win, 1, 1, "Only losers rage quit. Are you sure you want to leave the game? (Y/N): ");

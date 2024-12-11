@@ -6,7 +6,14 @@
  * 
  */
 
+#include <pthread.h>
 #include "graphics.h"
+
+
+static size_t cursor = 2;    // Starting cursor position
+static pthread_t cursor_thread;
+static pthread_mutex_t cursor_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool tracking_active = true;
 
 /**
  * Initializes the curses environment
@@ -113,6 +120,50 @@ void display_prompt(WINDOW* win, const char* prompt, char* input, int max_len) {
     mvwgetnstr(win, 3, 2, input, max_len);    // Get the user's input
     noecho();                                 // Disable input echoing
     curs_set(0);     
+}
+
+/**
+ * Cursor tracking thread to make sure the cursor resets
+ *      before if goes out of bounds of the prompt window
+ * 
+ * @param arg Placeholder for window
+ */
+static void* cursor_tracking(void* arg) {
+    WINDOW* prompt_win = (WINDOW*)arg;
+
+    int maxy, maxx;
+    getmaxyx(prompt_win, maxy, maxx);       // Get prompt window size
+
+    while (tracking_active) {
+        pthread_mutex_lock(&cursor_mutex);
+        if (cursor >= maxy - 1) {
+            werase(prompt_win);     // Clear the window
+            box(prompt_win, 0, 0);  // Redraw the box 
+            wrefresh(prompt_win);   // Refresh the prompt window 
+            cursor = 2;             // Reset the cursor
+        }
+
+        pthread_mutex_unlock(&cursor_mutex);
+    }
+    return NULL;
+}
+
+/**
+ * Start the thread to monitor and reset the prompt window 
+ * 
+ * @param prompt_win The prompt window to monitor
+ */
+void start_cursor_tracking(WINDOW* prompt_win) {
+    tracking_active = true;
+    pthread_create(&cursor_thread, NULL, cursor_tracking, prompt_win);
+}
+
+/**
+ * Stop the start_cursor_tracking thread
+ */
+void stop_cursor_tracking() {
+    tracking_active = false;
+    pthread_join(cursor_thread, NULL);
 }
 
 /**

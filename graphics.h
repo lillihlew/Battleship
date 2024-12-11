@@ -8,8 +8,10 @@
 
 #pragma once
 
-#include "board.h"
+#include <pthread.h>
 #include <curses.h>
+#include <stdbool.h>
+#include "board.h"
 
 /**
  * Initializes the curses environment
@@ -60,6 +62,18 @@ WINDOW* create_prompt_window(int start_x, int start_y);
  * @param message The message to display.
  */
 void display_prompt(WINDOW* win, const char* prompt, char* input, int max_len);
+
+/**
+ * Start the thread to monitor and reset the prompt window 
+ * 
+ * @param prompt_win The prompt window to monitor
+ */
+void start_cursor_tracking(WINDOW* prompt_win);
+
+/**
+ * Stop the start_cursor_tracking thread
+ */
+void stop_cursor_tracking();
 
 /**
  * End the curses environment
