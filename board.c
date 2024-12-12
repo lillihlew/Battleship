@@ -2,8 +2,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
-#include "board.h"
 #include <curses.h>
+
+#include "board.h"
 #include "graphics.h"
 
 //the ships we use in the game
@@ -21,6 +22,10 @@ size_t cursor = INIT_CURSOR;
 static pthread_t cursor_thread;
 static pthread_mutex_t cursor_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool tracking_active = true;
+
+static pthread_t victory_thread;
+static pthread_mutex_t victory_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool game_active = true;
 
 //track most recent prompt (not including error messages)
 char * most_recent_prompt;
@@ -696,7 +701,7 @@ static void* cursor_tracking(void* arg) {
     return NULL;
 }
 
-/**
+/** 
  * Start the thread to monitor and reset the prompt window 
  * 
  * @param prompt_win The prompt window to monitor
@@ -712,4 +717,55 @@ void start_cursor_tracking(WINDOW* prompt_win) {
 void stop_cursor_tracking() {
     tracking_active = false;
     pthread_join(cursor_thread, NULL);
+}
+
+/**
+ * Victory tracking thread to monitor the game state and end the game when a player wins.
+ * 
+ * @param arg An array of pointers to the two player boards.
+ */
+static void* victory_tracking(void* arg) {
+    board_t** boards = (board_t**)arg;
+    board_t* player1_board = boards[0];
+    board_t* player2_board = boards[1];
+
+    while (game_active) {
+        pthread_mutex_lock(&victory_mutex);
+        // Check if Player 1 has won
+        if (checkVictory(player2_board)) {
+            mvwprintw(stdscr, 1, 1, "Player 1 wins!");
+            wrefresh(stdscr);
+            game_active = false;
+        }
+        // Check if Player 2 has won
+        else if (checkVictory(player1_board)) {
+            mvwprintw(stdscr, 1, 1, "Player 2 wins!");
+            wrefresh(stdscr);
+            game_active = false;
+        }
+        pthread_mutex_unlock(&victory_mutex);
+    }
+
+    return NULL;
+}
+
+/**
+ * Start the victory tracking thread.
+ * 
+ * @param player1_board The board of Player 1.
+ * @param player2_board The board of Player 2.
+ */
+void start_victory_tracking(board_t* player1_board, board_t* player2_board) {
+    board_t** boards = malloc(2 * sizeof(board_t*));
+    boards[0] = player1_board;
+    boards[1] = player2_board;
+    pthread_create(&victory_thread, NULL, victory_tracking, boards);
+}
+
+/**
+ * Stop the victory tracking thread.
+ */
+void stop_victory_tracking() {
+    game_active = false;
+    pthread_join(victory_thread, NULL);
 }

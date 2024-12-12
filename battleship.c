@@ -112,9 +112,12 @@ void run_server(unsigned short port) {
         close(server_socket_fd);
         end_curses();
         exit(EXIT_FAILURE);
-    }else{
+    } else {
         free(message);
     }
+
+    // Start victory tracking thread
+    start_victory_tracking(&player1_board, &player2_board);
 
     // Main game loop
     bool game_running = true;
@@ -188,14 +191,6 @@ void run_server(unsigned short port) {
         draw_opponent_board(opponent_win, player2_board.array);
         // free(attack_result);
 
-        // Check if Player 1 won
-        if (checkVictory(&player2_board)) {
-            mvwprintw(prompt_win, 1, 1, "Player 1 wins!\n");
-            wrefresh(prompt_win);
-            send_message(client_socket_fd, "WIN");
-            break;
-        }
-
         // Player 2's turn
         mvwprintw(prompt_win, 1, 1, "Waiting for Player 2's attack...\n");
         wrefresh(prompt_win);
@@ -216,20 +211,14 @@ void run_server(unsigned short port) {
 
         // Update the player's board window with the result
         draw_player_board(player_win, player1_board.array);
-
-        // Check if Player 2 won
-        if (checkVictory(&player1_board)) {
-            mvwprintw(prompt_win, 1, 1, "Player 2 wins!\n");
-            wrefresh(prompt_win);
-            send_message(client_socket_fd, "LOSE");
-            break;
-        }
     }
+
+    stop_cursor_tracking();
+    stop_victory_tracking();
 
     // Close sockets and end curses
     close(client_socket_fd);
     close(server_socket_fd);
-    stop_cursor_tracking();
     end_curses();
 }
 
@@ -292,9 +281,12 @@ void run_client(char* server_name, unsigned short port) {
         printf("Exiting with exit failure because server was NOT ready\n.");
         printf("'%s'\n", message);
         exit(EXIT_FAILURE);
-    }else{
+    } else {
         free(message);
     }
+
+    // Start victory tracking thread
+    start_victory_tracking(&player1_board, &player2_board);
 
     // Main game loop
     bool game_running = true;
@@ -322,15 +314,6 @@ void run_client(char* server_name, unsigned short port) {
 
         // Update the player's board window with the result
         draw_player_board(player_win, player2_board.array);
-
-        // Check if Player 1 won
-        if (checkVictory(&player2_board)) {
-            mvwprintw(prompt_win, 1, 1, "Player 1 wins!\n");
-            wrefresh(prompt_win);
-            send_message(socket_fd, "LOSE");
-            break;
-        }
-
 
         // Player 2's turn
         //mvwprintw(prompt_win, 1, 1, "**Enter attack coordinates (e.g., A,1): ");
@@ -392,19 +375,13 @@ void run_client(char* server_name, unsigned short port) {
         }
         draw_opponent_board(opponent_win, player1_board.array);
         // free(attack_result);
-
-        // Check if Player 2 won
-        if (checkVictory(&player1_board)) {
-            mvwprintw(prompt_win, 1, 1, "Player 2 wins!\n");
-            wrefresh(prompt_win);
-            send_message(socket_fd, "WIN");
-            break;
-        }
     }
+
+    stop_cursor_tracking();
+    stop_victory_tracking();
 
     // Close the connection and end curses
     close(socket_fd);
-    stop_cursor_tracking();
     end_curses();
 }
 

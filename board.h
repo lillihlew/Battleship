@@ -60,6 +60,7 @@ bool checkVictory(board_t *board);
 // Function that initializes a players game board
 void initBoard(board_t *board); 
 
+void printStatus(board_t board, WINDOW * window);
 
 bool checkOverlap(board_t * board, struct shipLocation proposal);
 
@@ -83,4 +84,15 @@ void start_cursor_tracking(WINDOW* prompt_win);
  */
 void stop_cursor_tracking();
 
-void printStatus(board_t board, WINDOW * window);
+/**
+ * Start the victory tracking thread.
+ * 
+ * @param player1_board The board of Player 1.
+ * @param player2_board The board of Player 2.
+ */
+void start_victory_tracking(board_t* player1_board, board_t* player2_board);
+
+/**
+ * Stop the victory tracking thread.
+ */
+void stop_victory_tracking();
