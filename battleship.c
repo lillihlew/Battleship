@@ -127,6 +127,8 @@ void run_server(unsigned short port) {
         x = attack_coords[0];  // Row index
         y = attack_coords[1];  // Column index
 
+        mvwprintw(prompt_win, 10, 1, "Valid attack coords: %d,%d", x, y);
+
         // Send attack to Player 2
         // char attack_message[16];
         
@@ -284,6 +286,8 @@ void run_client(char* server_name, unsigned short port) {
         free(message);
         close(socket_fd);
         end_curses();
+        printf("Exiting with exit failure because server was NOT ready\n.");
+        printf("'%s'\n", message);
         exit(EXIT_FAILURE);
     }else{
         free(message);
