@@ -395,7 +395,8 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         mvwprintw(window, cursor++, 1, "Current Ship: %s\n", current.name);
         mvwprintw(window, cursor++, 1, "Ship Length: %d\n", current.size);
         most_recent_prompt = "Current Ship: ";
-        strcat(most_recent_prompt, current.name);
+        char * name = current.name;
+        strcat(most_recent_prompt, name);
         strcat(most_recent_prompt, "\n Ship Length: ");
         char size[2];
         size[0] = (char) current.size;
@@ -668,9 +669,17 @@ static void* cursor_tracking(void* arg) {
         pthread_mutex_lock(&cursor_mutex);
         if (cursor >= maxy - 1) {
             werase(prompt_win);     // Clear the window
-            box(prompt_win, 0, 0);  // Redraw the box
-            wrefresh(prompt_win);   // Refresh the prompt window 
+            box(prompt_win, 0, 0);  // Redraw the box'
+            if (strlen(most_recent_prompt) > 0) {
+                mvwprintw(prompt_win, INIT_CURSOR, 1, "%s", most_recent_prompt);
+                cursor = INIT_CURSOR;
+            } else {
+                cursor = INIT_CURSOR + 1;
+                mvwprintw(prompt_win, INIT_CURSOR, 1, "%s", "If you are getting this error, we have a big fucking problem in 'cursor_tracking' from 'board.c'");
+            }
+            wrefresh(prompt_win);   // Refresh the prompt window
         }
+        
         pthread_mutex_unlock(&cursor_mutex);
     }
     return NULL;

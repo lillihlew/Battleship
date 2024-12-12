@@ -135,15 +135,15 @@ void run_server(unsigned short port) {
         char attack_coords_char[3];
 
         //loop through attack_coords, if the coord is a 10 make it the 0 char in attack_chords_char, else make it its ascii rep
-        for (int i = 0; i < 2; i++){
-            if (attack_coords[i] == 10){
-                attack_coords_char[i] = '0'; 
-                printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
-            } else {
-                attack_coords_char[i] = attack_coords[i] + '0';
-                printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
-            }    
-        }
+        // for (int i = 0; i < 2; i++){
+        //     if (attack_coords[i] == 10){
+        //         attack_coords_char[i] = '0'; 
+        //         printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
+        //     } else {
+        //         attack_coords_char[i] = attack_coords[i] + '0';
+        //         printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
+        //     }    
+        // }
 
         attack_coords_char[2] = '\0';
         snprintf(attack_coords_char, 2, "%c,%c", x, y);
@@ -158,16 +158,16 @@ void run_server(unsigned short port) {
         int  p2_attack_int[sizeof(p2_attack)];
 
         //loop through p2_attack checking if its 
-        for (int i = 0; i < sizeof(p2_attack); i++){
-            if (p2_attack_int[i] == '0'){
-                p2_attack[i] = 10;
-                printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
-            } else {
-                p2_attack_int[i] = p2_attack[i] - '0';
-                printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
-            }
+        // for (int i = 0; i < sizeof(p2_attack); i++){
+        //     if (p2_attack_int[i] == '0'){
+        //         p2_attack[i] = 10;
+        //         printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
+        //     } else {
+        //         p2_attack_int[i] = p2_attack[i] - '0';
+        //         printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
+        //     }
             
-        }
+        // }
         
         free(p2_attack);
         attack_result = hitOrMiss(p2_attack_int, &player2_board);
@@ -336,15 +336,15 @@ void run_client(char* server_name, unsigned short port) {
         char  attack_coords_char[3];
 
         //loop through attack_coords, if the coord is a 10 make it the 0 char in attack_chords_char, else make it its ascii rep
-        for (int i = 0; i < 2; i++){
-            if (attack_coords[i] == 10){
-                attack_coords_char[i] = '0'; 
-                printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
-            } else {
-                attack_coords_char[i] = attack_coords[i] + '0';
-                printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
-            }    
-        }
+        // for (int i = 0; i < 2; i++){
+        //     if (attack_coords[i] == 10){
+        //         attack_coords_char[i] = '0'; 
+        //         printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
+        //     } else {
+        //         attack_coords_char[i] = attack_coords[i] + '0';
+        //         printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
+        //     }    
+        // }
 
         attack_coords_char[2] = '\0';
         
@@ -361,15 +361,15 @@ void run_client(char* server_name, unsigned short port) {
         int p1_attack_int[sizeof(p1_attack)];
 
         //loop through p2_attack checking if its 
-        for (int i = 0; i < sizeof(p1_attack); i++){
-            if (p1_attack_int[i] == '0'){
-                p1_attack[i] = 10;
-                printf("Int Version: %d\n Char Version: %c\n",p1_attack_int[i], p1_attack[i]);
-            } else {
-                p1_attack_int[i] = p1_attack[i] - '0';
-                printf("Int Version: %d\n Char Version: %c\n",p1_attack_int[i], p1_attack[i]);
-            }
-        }
+        // for (int i = 0; i < sizeof(p1_attack); i++){
+        //     if (p1_attack_int[i] == '0'){
+        //         p1_attack[i] = 10;
+        //         printf("Int Version: %d\n Char Version: %c\n",p1_attack_int[i], p1_attack[i]);
+        //     } else {
+        //         p1_attack_int[i] = p1_attack[i] - '0';
+        //         printf("Int Version: %d\n Char Version: %c\n",p1_attack_int[i], p1_attack[i]);
+        //     }
+        // }
 
         free(p1_attack);
         attack_result = hitOrMiss(p1_attack_int, &player1_board);
