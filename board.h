@@ -83,4 +83,4 @@ void start_cursor_tracking(WINDOW* prompt_win);
  */
 void stop_cursor_tracking();
 
-void printStatus(board_t board, WINDOW * window);
+void printStatus(board_t board, WINDOW * window, char* filename);

@@ -402,7 +402,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         most_recent_prompt = malloc(ourWords+nameLen+1+1);//extra 1 for ship length
         sprintf(most_recent_prompt, "Current Ship: %s\nShip Length: %d\n", current.name, current.size);
 
-        
+
 
         //prompt user to give us their orientation for the ship and save it in bigO
         enum Orientation bigO = INVALID;
@@ -621,14 +621,14 @@ void initBoard(board_t *board) {
 /**printStatus
  *  used by us during debugging to print the occupation status of each cell
  */
-void printStatus(board_t board, WINDOW * window){
-    FILE* p1BoardContent = fopen("p1Board.txt", "w+");
+void printStatus(board_t board, WINDOW * window, char* filename){
+    FILE* boardContent = fopen(filename, "w+");
     for (int i = 1; i < NROWS+1; i++){
         for (int j = 1; j < NROWS+1; j++){
-            fprintf(p1BoardContent, "Cell %d,%d is occupied (1 is true): %d\n", i, j, board.array[i][j].occupied);
+            fprintf(boardContent, "Cell %d,%d is occupied (1 is true): %d\n", i, j, board.array[i][j].occupied);
         }
     }
-    
+    fclose(boardContent);
 }
 
 
