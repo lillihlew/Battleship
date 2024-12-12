@@ -55,25 +55,25 @@ void draw_opponent_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]);
  */
 WINDOW* create_prompt_window(int start_x, int start_y);
 
-/**
- * Displays a prompt message in the given window and clears the input field.
- * 
- * @param win     The window where the prompt is displayed.
- * @param message The message to display.
- */
-void display_prompt(WINDOW* win, const char* prompt, char* input, int max_len);
+// /**
+//  * Displays a prompt message in the given window and clears the input field.
+//  * 
+//  * @param win     The window where the prompt is displayed.
+//  * @param message The message to display.
+//  */
+// void display_prompt(WINDOW* win, const char* prompt, char* input, int max_len);
 
-/**
- * Start the thread to monitor and reset the prompt window 
- * 
- * @param prompt_win The prompt window to monitor
- */
-void start_cursor_tracking(WINDOW* prompt_win);
+// /**
+//  * Start the thread to monitor and reset the prompt window 
+//  * 
+//  * @param prompt_win The prompt window to monitor
+//  */
+// void start_cursor_tracking(WINDOW* prompt_win);
 
-/**
- * Stop the start_cursor_tracking thread
- */
-void stop_cursor_tracking();
+// /**
+//  * Stop the start_cursor_tracking thread
+//  */
+// void stop_cursor_tracking();
 
 /**
  * End the curses environment

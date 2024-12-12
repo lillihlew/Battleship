@@ -18,6 +18,10 @@ const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cr
 //track where the cursor is
 size_t cursor = INIT_CURSOR;
 
+static pthread_t cursor_thread;
+static pthread_mutex_t cursor_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool tracking_active = true;
+
 /**checkBounds
  *  checkBounds takes a player's proposal shipLocation (including origin, size, 
  *  and orientation) and returns true if the boundaries for the proposed ship 
@@ -623,3 +627,44 @@ char * hitOrMiss(int attackCoordsArray[2], board_t * board){
     }
 }
 
+/**
+ * Cursor tracking thread to make sure the cursor resets
+ *      before if goes out of bounds of the prompt window
+ * 
+ * @param arg Placeholder for window
+ */
+static void* cursor_tracking(void* arg) {
+    WINDOW* prompt_win = (WINDOW*)arg;
+
+    int maxy, maxx;
+    getmaxyx(prompt_win, maxy, maxx);       // Get prompt window size
+
+    while (tracking_active) {
+        pthread_mutex_lock(&cursor_mutex);
+        if (cursor >= maxy - 1) {
+            werase(prompt_win);     // Clear the window
+            box(prompt_win, 0, 0);  // Redraw the box
+            wrefresh(prompt_win);   // Refresh the prompt window 
+        }
+        pthread_mutex_unlock(&cursor_mutex);
+    }
+    return NULL;
+}
+
+/**
+ * Start the thread to monitor and reset the prompt window 
+ * 
+ * @param prompt_win The prompt window to monitor
+ */
+void start_cursor_tracking(WINDOW* prompt_win) {
+    tracking_active = true;
+    pthread_create(&cursor_thread, NULL, cursor_tracking, prompt_win);
+}
+
+/**
+ * Stop the start_cursor_tracking thread
+ */
+void stop_cursor_tracking() {
+    tracking_active = false;
+    pthread_join(cursor_thread, NULL);
+}

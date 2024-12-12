@@ -70,3 +70,15 @@ int* validCoords(int * yay, WINDOW * window, char * prompt);
 board_t makeBoard(WINDOW * window, WINDOW * playerWindow);
 
 char * hitOrMiss(int attackCoordsArray[2], board_t * board);
+
+/**
+ * Start the thread to monitor and reset the prompt window 
+ * 
+ * @param prompt_win The prompt window to monitor
+ */
+void start_cursor_tracking(WINDOW* prompt_win);
+
+/**
+ * Stop the start_cursor_tracking thread
+ */
+void stop_cursor_tracking();

@@ -79,6 +79,7 @@ void run_server(unsigned short port) {
     WINDOW* player_win = create_board_window(1, 1, "Your Board");
     WINDOW* opponent_win = create_board_window(1, 40, "Opponent's Board");
     WINDOW* prompt_win = create_prompt_window(16, 1);
+    start_cursor_tracking(prompt_win);
 
     // Display welcome message
     welcome_message(prompt_win);
@@ -224,6 +225,7 @@ void run_server(unsigned short port) {
     // Close sockets and end curses
     close(client_socket_fd);
     close(server_socket_fd);
+    stop_cursor_tracking();
     end_curses();
 }
 
@@ -252,6 +254,7 @@ void run_client(char* server_name, unsigned short port) {
     WINDOW* player_win = create_board_window(1, 1, "Your Board");
     WINDOW* opponent_win = create_board_window(1, 40, "Opponent's Board");
     WINDOW* prompt_win = create_prompt_window(16, 1);
+    start_cursor_tracking(prompt_win);
 
     // Display welcome message
     welcome_message(prompt_win);
@@ -394,6 +397,7 @@ void run_client(char* server_name, unsigned short port) {
 
     // Close the connection and end curses
     close(socket_fd);
+    stop_cursor_tracking();
     end_curses();
 }
 
