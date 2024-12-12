@@ -124,7 +124,8 @@ enum Orientation validOrt(WINDOW * window){
 
     //provide user instructions
     mvwprintw(window, cursor, 1, "Please input orientation (V/H): ");
-    most_recent_prompt = "Please input orientation (V/H): ";
+    free(most_recent_prompt);
+    most_recent_prompt = strdup("Please input orientation (V/H): ");
 
     //loop until we have valid input
     while (invalid){
@@ -375,6 +376,7 @@ int * validCoords(int * yay, WINDOW * window, char * prompt){
  *  board on failure, but it shouldn't be able to fail.
  */
 board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
+    most_recent_prompt = strdup("first instance of strdup to avoid bugs! :)");
     //make a new board and pointer to it
     board_t board;
     // board_t *boardPtr = malloc((sizeof(cell_t))*(NROWS+1)*(NCOLS+1));
@@ -394,21 +396,21 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         //give user info on which ship we're using 
         mvwprintw(window, cursor++, 1, "Current Ship: %s\n", current.name);
         mvwprintw(window, cursor++, 1, "Ship Length: %d\n", current.size);
-        most_recent_prompt = "Current Ship: ";
-        strcat(most_recent_prompt, current.name);
-        strcat(most_recent_prompt, "\n Ship Length: ");
-        char size[2];
-        size[0] = (char) current.size;
-        size[1] = '\0';
-        strcat(most_recent_prompt, size);
-        strcat(most_recent_prompt, "\n");
+        int nameLen = strlen(current.name);
+        int ourWords = strlen("Current Ship: \nShip Length: \n");
+        free(most_recent_prompt);
+        most_recent_prompt = malloc(ourWords+nameLen+1+1);//extra 1 for ship length
+        sprintf(most_recent_prompt, "Current Ship: %s\nShip Length: %d\n", current.name, current.size);
+
+        
 
         //prompt user to give us their orientation for the ship and save it in bigO
         enum Orientation bigO = INVALID;
         bigO = validOrt(window); //this will not return until it's a valid orientation.
         if(bigO==INVALID) {
             mvwprintw(window, cursor++, 1, "INVALID ORIENTATION. Restarting this ship placement.\n");
-            most_recent_prompt = "INVALID ORIENTATION. Restarting this ship placement.\n";
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("INVALID ORIENTATION. Restarting this ship placement.\n");
             i--;
             continue;
         }
@@ -418,7 +420,8 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         memcpy(coords, validCoords(coords, window, "Please input coordinates for the start point of your ship (ex: A,1): \0"), (2* sizeof(int)));
         if(coords[0] == 0 || coords[1]==0) {
             mvwprintw(window, cursor++, 1, "INVALID COORDINATES. Restarting this ship placement.\n");
-            most_recent_prompt = "INVALID COORDINATES. Restarting this ship placement.\n";
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("INVALID COORDINATES. Restarting this ship placement.\n");
             i--;
             continue;
         }
@@ -433,7 +436,8 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         //check if proposal shipLocation will cross bounds of board
         if(!(checkBounds(proposal))) {
             mvwprintw(window, cursor++, 1, "INVALID PLACEMENT-- BOUNDARY CROSSING. Restarting this ship placement.\n");
-            most_recent_prompt = "INVALID PLACEMENT-- BOUNDARY CROSSING. Restarting this ship placement.\n";
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("INVALID PLACEMENT-- BOUNDARY CROSSING. Restarting this ship placement.\n");
             i--;
             continue;
         }
@@ -441,7 +445,8 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         //check if proposal shipLocation will overlap with another ship's placement, and if not, update board
         if(checkOverlap(&board, proposal)){
             mvwprintw(window, cursor++, 1, "INVALID PLACEMENT-- OVERLAP. Restarting this ship placement.\n");
-            most_recent_prompt = "INVALID PLACEMENT-- OVERLAP. Restarting this ship placement.\n";
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("INVALID PLACEMENT-- OVERLAP. Restarting this ship placement.\n");
             i--;
             continue;
         } else {
@@ -458,11 +463,13 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
 
         //inform user of success
         mvwprintw(window, cursor++, 1, "Valid ship placement.\n");
-        most_recent_prompt = "Valid ship placement.\n";
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("Valid ship placement.\n");
        
         //give user option to start board over
         mvwprintw(window, cursor++, 1, "If you would like to reset your board, you may now type in 'R'. Otherwise, hit enter.\n");
-        most_recent_prompt = "If you would like to reset your board, you may now type in 'R'. Otherwise, hit enter.\n";
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("If you would like to reset your board, you may now type in 'R'. Otherwise, hit enter.\n");
         
         //store input
         char input;
@@ -473,7 +480,8 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
             mvwprintw(window, cursor, 1, "Invalid input: please input R to reset or hit enter to continue: ");
             input = (char) wgetch(window);
             mvwprintw(window, cursor++, strlen("Invalid input: please input R to reset or hit enter to continue: ")+1, ": %c\n", input);
-            most_recent_prompt = "Invalid input: please input R to reset or hit enter to continue: ";
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("Invalid input: please input R to reset or hit enter to continue: ");
         }
 
         //if user wanted to reset board, wipe the board and reset i to -1 to start the loop all the way over
@@ -493,7 +501,9 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
     
     //print exit message
     mvwprintw(window, 1, 1, "Board setup complete, enjoy the game!\n");
-    most_recent_prompt = "Board setup complete, enjoy the game!\n";
+    free(most_recent_prompt);
+    most_recent_prompt = strdup("Board setup complete, enjoy the game!\n");
+    free(most_recent_prompt);
 
     //reset cursor to top of box
     cursor = INIT_CURSOR;
