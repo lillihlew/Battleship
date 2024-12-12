@@ -93,6 +93,8 @@ void run_server(unsigned short port) {
     mvwprintw(prompt_win, 1, 1, "**Place your ships**");
     wrefresh(prompt_win);
     player1_board = makeBoard(prompt_win, player_win);
+    printStatus(player1_board, prompt_win);
+
     // memcpy(&player1_board, (makeBoard(prompt_win, player_win)), ((sizeof(cell_t))*(NROWS+1)*(NCOLS+1)));
 
     // Update the player's board window
@@ -271,6 +273,7 @@ void run_client(char* server_name, unsigned short port) {
     wrefresh(prompt_win);
     // memcpy(&player2_board, (makeBoard(prompt_win, player_win)), ((sizeof(cell_t))*(NROWS+1)*(NCOLS+1)));
     player2_board = makeBoard(prompt_win, player_win);
+    printStatus(player1_board, prompt_win);
 
     // Update the player's board window
     draw_player_board(player_win, player2_board.array);

@@ -624,11 +624,13 @@ void initBoard(board_t *board) {
  *  used by us during debugging to print the occupation status of each cell
  */
 void printStatus(board_t board, WINDOW * window){
+    FILE* p1BoardContent = fopen("p1Board.txt", "w+");
     for (int i = 1; i < NROWS+1; i++){
         for (int j = 1; j < NROWS+1; j++){
-            mvwprintw(window, cursor++, 1, "Cell %d,%d is occupied (! is true): %d\n", i, j, board.array[i][j].occupied);
+            fprintf(p1BoardContent, "Cell %d,%d is occupied (1 is true): %d\n", i, j, board.array[i][j].occupied);
         }
     }
+    
 }
 
 

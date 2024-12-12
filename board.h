@@ -82,3 +82,5 @@ void start_cursor_tracking(WINDOW* prompt_win);
  * Stop the start_cursor_tracking thread
  */
 void stop_cursor_tracking();
+
+void printStatus(board_t board, WINDOW * window);
