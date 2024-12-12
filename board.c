@@ -396,15 +396,13 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
         //give user info on which ship we're using 
         mvwprintw(window, cursor++, 1, "Current Ship: %s\n", current.name);
         mvwprintw(window, cursor++, 1, "Ship Length: %d\n", current.size);
-        most_recent_prompt = "Current Ship: ";
-        char * name = current.name;
-        strcat(most_recent_prompt, name);
-        strcat(most_recent_prompt, "\n Ship Length: ");
-        char size[2];
-        size[0] = (char) current.size;
-        size[1] = '\0';
-        strcat(most_recent_prompt, size);
-        strcat(most_recent_prompt, "\n");
+        int nameLen = strlen(current.name);
+        int ourWords = strlen("Current Ship: \nShip Length: \n");
+        free(most_recent_prompt);
+        most_recent_prompt = malloc(ourWords+nameLen+1+1);//extra 1 for ship length
+        sprintf(most_recent_prompt, "Current Ship: %s\nShip Length: %d\n", current.name, current.size);
+
+        
 
         //prompt user to give us their orientation for the ship and save it in bigO
         enum Orientation bigO = INVALID;
