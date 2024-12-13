@@ -176,9 +176,17 @@ void run_server(unsigned short port) {
         player2_board.array[x][y].guessed = true;
         if (strcmp(attack_result, "HIT") == 0) {
             player2_board.array[x][y].hit = true;
+            // if (player1_board.array[x][y].ship.sunk == true){
+            //     mvwprintw(prompt_win, 10, 1, "You sunk the opponents %s!\n", player1_board.array[x][y].ship.name);
+            // }
         } else if (strcmp(attack_result, "MISS") == 0) {
             player2_board.array[x][y].guessed = true;
         }
+
+        if(player2_board.array[x][y].hit){
+            char letter = x + 'A' - 1;
+            mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!\n", letter, y);
+        };
         draw_opponent_board(opponent_win, player2_board.array);
         sleep(1);
 
@@ -234,14 +242,6 @@ void run_server(unsigned short port) {
     // Stop the tracking threads
     stop_victory_tracking();
     stop_cursor_tracking();
-<<<<<<< HEAD
-    
-=======
-    // stop_victory_tracking();
-
-    //fclose(serverInputCoordsFile);
-
->>>>>>> be00bbc266192c3cdccb523b60f25c47c395f6e3
     // Close sockets and end curses
     close(client_socket_fd);
     close(server_socket_fd);
@@ -396,9 +396,17 @@ void run_client(char* server_name, unsigned short port) {
         if (strcmp(attack_result, "HIT") == 0) {
             player1_board.array[x][y].guessed = true;
             player1_board.array[x][y].hit = true;
+            // if (player1_board.array[x][y].ship.sunk == true){
+            //     mvwprintw(prompt_win, 10, 1, "You sunk the opponents %s!\n", player1_board.array[x][y].ship.name);
+            // }
         } else if (strcmp(attack_result, "MISS") == 0) {
             player1_board.array[x][y].guessed = true;
         }
+
+        if(player1_board.array[x][y].hit){
+            char letter = x + 'A' - 1;
+            mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!\n", letter, y);
+        };
         draw_opponent_board(opponent_win, player1_board.array);
         free(attack_result);
         //fclose(clientInputCoordsFile);
