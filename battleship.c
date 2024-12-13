@@ -89,12 +89,21 @@ void run_server(unsigned short port) {
 
     // Initialize game boards for both players
     board_t player1_board, player2_board;
+    initBoard(&player1_board);
+    initBoard(&player2_board);
+
+    // Show the empty boards to the player
+    draw_player_board(player_win, player1_board.array);
+    draw_opponent_board(opponent_win, player2_board.array);
+
+    // Refresh the windows
+    wrefresh(player_win);
+    wrefresh(opponent_win);
 
     // Player 1 places ships
     mvwprintw(prompt_win, 1, 1, "**Place your ships**");
     wrefresh(prompt_win);
     player1_board = makeBoard(prompt_win, player_win);
-    initBoard(&player2_board);
     printStatus(player1_board, prompt_win, "p1Board.txt");
     // memcpy(&player1_board, (makeBoard(prompt_win, player_win)), ((sizeof(cell_t))*(NROWS+1)*(NCOLS+1)));
 
@@ -105,7 +114,10 @@ void run_server(unsigned short port) {
     send_message(client_socket_fd, "READY");
     sleep(1);
 
-    // Wait for the client to be ready
+    // Wait for the client to finish placing ships
+    mvwprintw(prompt_win, 1, 1, "Waiting for opponent to place ships...");
+    wrefresh(prompt_win);
+
     char* message = receive_message(client_socket_fd);
     if (strcmp(message, "READY") != 0) {
         printf("Client not ready. Exiting.\n");
@@ -115,7 +127,10 @@ void run_server(unsigned short port) {
         end_curses();
         exit(EXIT_FAILURE);
     } else {
+        mvwprintw(prompt_win, 1, 1, "Opponent is ready! Starting game...");
+        wrefresh(prompt_win);
         free(message);
+        sleep(1);
     }
 
     // Start victory tracking thread
@@ -246,6 +261,10 @@ void run_server(unsigned short port) {
     // Stop the tracking threads
     stop_victory_tracking();
     stop_cursor_tracking();
+<<<<<<< Updated upstream
+=======
+    
+>>>>>>> Stashed changes
     // Close sockets and end curses
     close(client_socket_fd);
     close(server_socket_fd);
@@ -290,6 +309,14 @@ void run_client(char* server_name, unsigned short port) {
     initBoard(&player2_board);
     initBoard(&player1_board);
 
+    // Show the empty boards to the player
+    draw_player_board(player_win, player2_board.array);
+    draw_opponent_board(opponent_win, player1_board.array);
+
+    // Refresh the windows
+    wrefresh(player_win);
+    wrefresh(opponent_win);
+
     // Player 2 places ships
     mvwprintw(prompt_win, 1, 1, "**Place your ships**");
     wrefresh(prompt_win);
@@ -304,7 +331,10 @@ void run_client(char* server_name, unsigned short port) {
     send_message(socket_fd, "READY");
     sleep(1);
 
-    // Wait for the server to be ready
+    // Wait for the server to finish placing ships
+    mvwprintw(prompt_win, 1, 1, "Waiting for opponent to place ships...");
+    wrefresh(prompt_win);
+
     char* message = receive_message(socket_fd);
     if (strcmp(message, "READY") != 0) {
         mvwprintw(prompt_win, 1, 1, "Server not ready. Exiting.\n");
@@ -316,7 +346,10 @@ void run_client(char* server_name, unsigned short port) {
         printf("'%s'\n", message);
         exit(EXIT_FAILURE);
     } else {
+        mvwprintw(prompt_win, 1, 1, "Opponent is ready! Starting game...");
+        wrefresh(prompt_win);
         free(message);
+        sleep(1);
     }
 
     // Start victory tracking thread
