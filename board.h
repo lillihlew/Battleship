@@ -11,6 +11,7 @@
 typedef struct shipType {
   char* name;
   int size;
+  bool sunk;
 } shipType_t;
 
 //  Each player gets 5 ships, a destroyer of size 2, a submarine of size 3, a cruiser of size 3, 

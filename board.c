@@ -457,9 +457,11 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
                 if (bigO == VERTICAL){
                     board.array[proposal.startx][proposal.starty + i].occupied = true;
                     board.array[proposal.startx][proposal.starty + i].ship = proposal.shipType;
+                    board.array[proposal.startx][proposal.starty + i].ship.sunk = false;
                 } else {
                     board.array[proposal.startx + i][proposal.starty].occupied = true;
                     board.array[proposal.startx + i][proposal.starty].ship = proposal.shipType;
+                    board.array[proposal.startx][proposal.starty + i].ship.sunk = false;
                 }
             }
         }
@@ -554,7 +556,8 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
     // Check if the cell is occupied by a ship
     if (cell->occupied) {
         //print user success
-        mvwprintw(window, cursor++, 1, "Hit!\n");
+        char letter = x + 'A' - 1;
+        mvwprintw(window, cursor++, 1, "You got hit at %c, %d!\n", letter, y);
 
         //update booleans
         *isHit = true;
@@ -562,7 +565,7 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
 
         // Save values for loop to check if the entire ship has been sunk
         shipType_t *ship = &cell->ship;
-        bool allCellsHit = true;
+        ship->sunk = true;
 
         /**
          * Scan the board for any remaining parts of this ship and flip allCellsHit 
@@ -572,22 +575,24 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
             for (int j = 1; j < NCOLS+1; j++) {
                 if (board->array[i][j].occupied && board->array[i][j].ship.name == ship->name
                         && !board->array[i][j].hit) {
-                    allCellsHit = false;
+                    ship->sunk = false;
                     break;
                 }
             } 
-            if (!allCellsHit) break;
+            if (!ship->sunk) break;
         }
 
         // If all parts of the ship are hit, it is sunk, so update that boolean
-        if (allCellsHit) {
+        if (ship->sunk) {
             *isSunk = true;
+            cell->ship.sunk = true;
             mvwprintw(window, cursor++, 1, "Opponent sunk a %s", ship->name);
         }
 
     } else {
+        char letter = x + 'A' - 1;
         // If the cell is not occupied, it's a miss
-        mvwprintw(window, cursor++, 1, "Miss!\n");
+        mvwprintw(window, cursor++, 1, "Opponent missed at %c, %d!\n",letter,y);
     }
 }
 
