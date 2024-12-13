@@ -261,10 +261,7 @@ void run_server(unsigned short port) {
     // Stop the tracking threads
     stop_victory_tracking();
     stop_cursor_tracking();
-<<<<<<< Updated upstream
-=======
     
->>>>>>> Stashed changes
     // Close sockets and end curses
     close(client_socket_fd);
     close(server_socket_fd);
