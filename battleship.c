@@ -183,10 +183,14 @@ void run_server(unsigned short port) {
             player2_board.array[x][y].guessed = true;
         }
 
+        //checks if attack was successful and sends message to attacker accordingly
         if(player2_board.array[x][y].hit){
             char letter = x + 'A' - 1;
             mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!\n", letter, y);
-        };
+        } else {
+            char letter = x + 'A' - 1;
+            mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d!\n", letter, y);
+        }
         draw_opponent_board(opponent_win, player2_board.array);
         sleep(1);
 
@@ -403,9 +407,13 @@ void run_client(char* server_name, unsigned short port) {
             player1_board.array[x][y].guessed = true;
         }
 
+        //checks if attack was successful and sends a message to attacker appropriately
         if(player1_board.array[x][y].hit){
             char letter = x + 'A' - 1;
             mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!\n", letter, y);
+        } else{
+            char letter = x + 'A' - 1;
+            mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d!\n", letter, y);
         };
         draw_opponent_board(opponent_win, player1_board.array);
         free(attack_result);
