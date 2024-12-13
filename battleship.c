@@ -101,6 +101,7 @@ void run_server(unsigned short port) {
 
     // Notify the client that the server is ready
     send_message(client_socket_fd, "READY");
+    sleep(1);
 
     // Wait for the client to be ready
     char* message = receive_message(client_socket_fd);
@@ -116,104 +117,123 @@ void run_server(unsigned short port) {
     }
 
     // Start victory tracking thread
-    start_victory_tracking(&player1_board, &player2_board);
+    // start_victory_tracking(&player1_board, &player2_board);
 
     // Main game loop
     bool game_running = true;
     while (game_running) {
+        FILE* serverInputCoordsFile = fopen("serverInputCoordsFile.txt", "w+");
         int attack_coords[2];
         int x, y;
 
-        // Player 1's turn
-        //mvwprintw(prompt_win, 1, 1, "Enter attack coordinates (e.g., A,1): ");
+        // Player 1's turn *********************************
         wrefresh(prompt_win);
-        validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): ");
+
+        //get attack coordinates from user
+        memcpy(attack_coords, validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): \0"), 2*sizeof(int));
         x = attack_coords[0];  // Row index
         y = attack_coords[1];  // Column index
 
-        mvwprintw(prompt_win, 10, 1, "Valid attack coords: %d,%d", x, y);
-
-        // Send attack to Player 2
-        // char attack_message[16];
-        
-
-        //make an array to store char values
+        //make an array to store char values so we can send them to client
         char attack_coords_char[3];
 
         //loop through attack_coords, if the coord is a 10 make it the 0 char in attack_chords_char, else make it its ascii rep
-        // for (int i = 0; i < 2; i++){
-        //     if (attack_coords[i] == 10){
-        //         attack_coords_char[i] = '0'; 
-        //         printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
-        //     } else {
-        //         attack_coords_char[i] = attack_coords[i] + '0';
-        //         printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
-        //     }    
-        // }
-
+        for (int i = 0; i < 2; i++){
+            if (attack_coords[i] == 10){
+                attack_coords_char[i] = '0'; 
+                // fprintf(serverInputCoordsFile, "Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
+            } else {
+                attack_coords_char[i] = attack_coords[i] + '0';
+                // fprintf(serverInputCoordsFile, "Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
+            }    
+        }
+        
+        //null terminate the char array
         attack_coords_char[2] = '\0';
-        snprintf(attack_coords_char, 2, "%c,%c", x, y);
-        send_message(client_socket_fd, attack_coords_char);
+
+        fprintf(serverInputCoordsFile, "hoping to send over attack coordinates: %s\n", attack_coords_char);
+
+        //send attack coordinates to client
+        if(send_message(client_socket_fd, attack_coords_char)!=0){
+            fprintf(serverInputCoordsFile, "SEND MESSAGE ERROR\n");
+        }
+        sleep(1);
+
+
 
         // Receive attack result
         char* attack_result = "INVALID";
 
-        char* p2_attack = receive_message(client_socket_fd);
+        attack_result = receive_message(client_socket_fd);
+        if(attack_result==NULL){
+            fprintf(serverInputCoordsFile, "RECEIVE MESSAGE ERROR\n");
+        }
 
-        //int array to convert from char to int
-        int  p2_attack_int[sizeof(p2_attack)];
-
-        //loop through p2_attack checking if its 
-        // for (int i = 0; i < sizeof(p2_attack); i++){
-        //     if (p2_attack_int[i] == '0'){
-        //         p2_attack[i] = 10;
-        //         printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
-        //     } else {
-        //         p2_attack_int[i] = p2_attack[i] - '0';
-        //         printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
-        //     }
-            
-        // }
-        
-        free(p2_attack);
-        attack_result = hitOrMiss(p2_attack_int, &player2_board);
-        mvwprintw(prompt_win, 1, 1, "Player 2: %s\n", attack_result);
-        // wrefresh(prompt_win);
+        fprintf(serverInputCoordsFile, "received attack result: %s\n", attack_result);
 
         // Update the opponent's board window with the result
+        player2_board.array[x][y].guessed = true;
         if (strcmp(attack_result, "HIT") == 0) {
-            player2_board.array[x][y].guessed = true;
             player2_board.array[x][y].hit = true;
         } else if (strcmp(attack_result, "MISS") == 0) {
             player2_board.array[x][y].guessed = true;
         }
         draw_opponent_board(opponent_win, player2_board.array);
-        // free(attack_result);
+        sleep(1);
+
+
 
         // Player 2's turn
         mvwprintw(prompt_win, 1, 1, "Waiting for Player 2's attack...\n");
         wrefresh(prompt_win);
-        char* enemy_attack = receive_message(client_socket_fd);
-        sscanf(enemy_attack, "%d,%d", &attack_coords[0], &attack_coords[1]);
-        x = attack_coords[0];
-        y = attack_coords[1];
-        free(enemy_attack);
+        char* enemy_attack_string = receive_message(client_socket_fd);
 
-        // Update Player 1's board based on Player 2's attack
+        //int array to convert from char to int
+        int  p2_attack_int[sizeof(enemy_attack_string)];
+
+        // loop through p2_attack and convert from char to int
+        for (int i = 0; i < sizeof(enemy_attack_string); i++){
+            if (enemy_attack_string[i] == '0'){
+                p2_attack_int[i] = 10;
+                // printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
+            } else {
+                p2_attack_int[i] = enemy_attack_string[i] - '0';
+                // printf("Int Version: %d\n Char Version: %c\n",p2_attack_int[i], p2_attack[i]);
+            }
+        }
+
+        free(enemy_attack_string);
+
+        fprintf(serverInputCoordsFile, "received int array: %d%d\n", p2_attack_int[0], p2_attack_int[1]);
+
+        // Update Player 1's board based on Player 2's attack (idk if this is necessary)
         bool hit, sunk;
-        updateBoardAfterGuess(&player1_board, x, y, &hit, &sunk, prompt_win);
+        updateBoardAfterGuess(&player1_board, p2_attack_int[0], p2_attack_int[1], &hit, &sunk, prompt_win);
 
+        // Update our board window with the result
+        // if (strcmp(p2_attack_result, "HIT") == 0) {
+        //     player1_board.array[x][y].guessed = true;
+        //     player1_board.array[x][y].hit = true;
+        // } else if (strcmp(p2_attack_result, "MISS") == 0) {
+        //     player1_board.array[x][y].guessed = true;
+        // }
+        draw_player_board(player_win, player1_board.array);
+        // free(attack_result);
+
+       
         // Send attack result to Player 2
         char result_message[16];
         snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
-        send_message(client_socket_fd, result_message);
 
-        // Update the player's board window with the result
-        draw_player_board(player_win, player1_board.array);
+        send_message(client_socket_fd, result_message);
+        fprintf(serverInputCoordsFile, "hoping to send over result message: %s\n", result_message);
+        // // Update the player's board window with the result
+        // draw_player_board(player_win, player1_board.array);
+        fclose(serverInputCoordsFile);
     }
 
     stop_cursor_tracking();
-    stop_victory_tracking();
+    // stop_victory_tracking();
 
     // Close sockets and end curses
     close(client_socket_fd);
@@ -268,6 +288,7 @@ void run_client(char* server_name, unsigned short port) {
 
     // Notify the server that the client is ready
     send_message(socket_fd, "READY");
+    sleep(1);
 
     // Wait for the server to be ready
     char* message = receive_message(socket_fd);
@@ -285,86 +306,83 @@ void run_client(char* server_name, unsigned short port) {
     }
 
     // Start victory tracking thread
-    start_victory_tracking(&player1_board, &player2_board);
+    // start_victory_tracking(&player1_board, &player2_board);
 
     // Main game loop
     bool game_running = true;
     while (game_running) {
+        FILE* clientInputCoordsFile = fopen("clientInputCoordsFile.txt", "w+");
         int attack_coords[2];
         int x, y;
 
         // Player 1's turn
         mvwprintw(prompt_win, 1, 1, "Waiting for Player 1's attack...\n");
         wrefresh(prompt_win);
-        char* enemy_attack = receive_message(socket_fd);
-        sscanf(enemy_attack, "%d,%d", &attack_coords[0], &attack_coords[1]);
-        x = attack_coords[0];
-        y = attack_coords[1];
-        free(enemy_attack);
+
+        //receive enemy attack coordinates in string form and convert to ints
+        char * enemy_attack_string = receive_message(socket_fd);
+        fprintf(clientInputCoordsFile, "received enemy_attack_string: %s with values %c,%c\n", enemy_attack_string, enemy_attack_string[0], enemy_attack_string[1]);
+        x = enemy_attack_string[0]-'0';
+        y = enemy_attack_string[1]-'0';
+        fprintf(clientInputCoordsFile, "received attack_coords: %d,%d\n", x, y);
+        free(enemy_attack_string);
 
         // Update Player 2's board based on Player 1's attack
         bool hit, sunk;
         updateBoardAfterGuess(&player2_board, x, y, &hit, &sunk, prompt_win);
 
-        // Send attack result to Player 1
-        char result_message[16];
-        snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
-        send_message(socket_fd, result_message);
-
         // Update the player's board window with the result
         draw_player_board(player_win, player2_board.array);
 
+        // Send attack result to Player 1
+        char result_message[16];
+        snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
+        fprintf(clientInputCoordsFile, "Attempting to send message: %s\n", result_message);
+        send_message(socket_fd, result_message);
+        sleep(1);
+        
+
+
         // Player 2's turn
-        //mvwprintw(prompt_win, 1, 1, "**Enter attack coordinates (e.g., A,1): ");
         wrefresh(prompt_win);
-        validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): \0");
+        fprintf(clientInputCoordsFile, "NOW CALLING VALID COORDS FROM CLIENT\n");
+        memcpy(attack_coords, validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): \0"), 2*sizeof(int));
         x = attack_coords[0];
         y = attack_coords[1];
-
+        fprintf(clientInputCoordsFile, "Valid attack coords FROM client have not been sent yet (x,y): %d,%d\n", x, y);
+        fprintf(clientInputCoordsFile, "Valid attack coords FROM client have not been sent yet (0,1): %d,%d\n", attack_coords[0], attack_coords[1]);
+        
         //make an array to store char values
         char  attack_coords_char[3];
 
         //loop through attack_coords, if the coord is a 10 make it the 0 char in attack_chords_char, else make it its ascii rep
-        // for (int i = 0; i < 2; i++){
-        //     if (attack_coords[i] == 10){
-        //         attack_coords_char[i] = '0'; 
-        //         printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
-        //     } else {
-        //         attack_coords_char[i] = attack_coords[i] + '0';
-        //         printf("Int Version: %d\n Char Version: %c\n",attack_coords[i], attack_coords_char[i]);
-        //     }    
-        // }
+        for (int i = 0; i < 2; i++){
+            if (attack_coords[i] == 10){
+                attack_coords_char[i] = '0'; 
+            } else {
+                attack_coords_char[i] = attack_coords[i] + '0';
+            }    
+        }
 
+        //null terminate char array
         attack_coords_char[2] = '\0';
         
+        fprintf(clientInputCoordsFile, "hoping to send over: %s\n", attack_coords_char);
+
         // Send attack to Player 1
-        // char attack_message[16];
-        snprintf(attack_coords_char, 2, "%d,%d", x, y);
         send_message(socket_fd, attack_coords_char);
+        sleep(1);
+
+
 
         // Receive attack result
         char* attack_result = "INVALID";
-        char* p1_attack = receive_message(socket_fd);
+        attack_result = receive_message(socket_fd);
 
-        //int array to convert from char to int
-        int p1_attack_int[sizeof(p1_attack)];
+        fprintf(clientInputCoordsFile, "received: %s\n", attack_result);
 
-        //loop through p2_attack checking if its 
-        // for (int i = 0; i < sizeof(p1_attack); i++){
-        //     if (p1_attack_int[i] == '0'){
-        //         p1_attack[i] = 10;
-        //         printf("Int Version: %d\n Char Version: %c\n",p1_attack_int[i], p1_attack[i]);
-        //     } else {
-        //         p1_attack_int[i] = p1_attack[i] - '0';
-        //         printf("Int Version: %d\n Char Version: %c\n",p1_attack_int[i], p1_attack[i]);
-        //     }
-        // }
-
-        free(p1_attack);
-        attack_result = hitOrMiss(p1_attack_int, &player1_board);
-        mvwprintw(prompt_win, 1, 1, "Player 1: %s\n", attack_result);
-        // wrefresh(prompt_win);
-
+        mvwprintw(prompt_win, 1, 1, "You %s\n", attack_result);
+        
         // Update the opponent's board window with the result
         if (strcmp(attack_result, "HIT") == 0) {
             player1_board.array[x][y].guessed = true;
@@ -373,11 +391,12 @@ void run_client(char* server_name, unsigned short port) {
             player1_board.array[x][y].guessed = true;
         }
         draw_opponent_board(opponent_win, player1_board.array);
-        // free(attack_result);
+        free(attack_result);
+        fclose(clientInputCoordsFile);
     }
 
     stop_cursor_tracking();
-    stop_victory_tracking();
+    // stop_victory_tracking();
 
     // Close the connection and end curses
     close(socket_fd);
