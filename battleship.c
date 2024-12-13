@@ -4,9 +4,9 @@
 
 #include "battleship.h"
 
+size_t cursor = INIT_CURSOR;
+
 int main(int argc, char *argv[]) {
-    // echo();
-    
     // Validate command-line arguments
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <role> [<server_name> <port>]\n", argv[0]);
@@ -79,6 +79,8 @@ void run_server(unsigned short port) {
     WINDOW* player_win = create_board_window(1, 1, "Your Board");
     WINDOW* opponent_win = create_board_window(1, 40, "Opponent's Board");
     WINDOW* prompt_win = create_prompt_window(16, 1);
+
+    cursor = INIT_CURSOR;   // Reset the cursor before tracking
     start_cursor_tracking(prompt_win);
 
     // Display welcome message
@@ -86,8 +88,6 @@ void run_server(unsigned short port) {
 
     // Initialize game boards for both players
     board_t player1_board, player2_board;
-    // initBoard(&player1_board);
-    // initBoard(&player2_board);
 
     // Player 1 places ships
     mvwprintw(prompt_win, 1, 1, "**Place your ships**");
@@ -117,7 +117,7 @@ void run_server(unsigned short port) {
     }
 
     // Start victory tracking thread
-    // start_victory_tracking(&player1_board, &player2_board);
+    start_victory_tracking(&player1_board, &player2_board, prompt_win);
 
     // Main game loop
     bool game_running = true;
@@ -181,8 +181,6 @@ void run_server(unsigned short port) {
         draw_opponent_board(opponent_win, player2_board.array);
         sleep(1);
 
-
-
         // Player 2's turn
         mvwprintw(prompt_win, 1, 1, "Waiting for Player 2's attack...\n");
         wrefresh(prompt_win);
@@ -232,9 +230,10 @@ void run_server(unsigned short port) {
         fclose(serverInputCoordsFile);
     }
 
+    // Stop the tracking threads
+    stop_victory_tracking();
     stop_cursor_tracking();
-    // stop_victory_tracking();
-
+    
     // Close sockets and end curses
     close(client_socket_fd);
     close(server_socket_fd);
@@ -266,6 +265,8 @@ void run_client(char* server_name, unsigned short port) {
     WINDOW* player_win = create_board_window(1, 1, "Your Board");
     WINDOW* opponent_win = create_board_window(1, 40, "Opponent's Board");
     WINDOW* prompt_win = create_prompt_window(16, 1);
+
+    cursor = INIT_CURSOR;   // Reset the cursor before tracking
     start_cursor_tracking(prompt_win);
 
     // Display welcome message
@@ -306,7 +307,7 @@ void run_client(char* server_name, unsigned short port) {
     }
 
     // Start victory tracking thread
-    // start_victory_tracking(&player1_board, &player2_board);
+    start_victory_tracking(&player1_board, &player2_board, prompt_win);
 
     // Main game loop
     bool game_running = true;
@@ -395,8 +396,9 @@ void run_client(char* server_name, unsigned short port) {
         fclose(clientInputCoordsFile);
     }
 
+    // Stop the tracking threads
+    stop_victory_tracking();
     stop_cursor_tracking();
-    // stop_victory_tracking();
 
     // Close the connection and end curses
     close(socket_fd);

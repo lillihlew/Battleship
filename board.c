@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <curses.h>
+#include <unistd.h>
 
 #include "board.h"
 #include "graphics.h"
@@ -13,19 +14,13 @@ const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cr
 //number of characters we read in at a time 
 #define BUFFERSIZE 4
 
-//vertical start index for the cursor of the user input window
-#define INIT_CURSOR 2 
-
-//track where the cursor is
-size_t cursor = INIT_CURSOR;
-
 static pthread_t cursor_thread;
 static pthread_mutex_t cursor_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool tracking_active = true;
 
-// static pthread_t victory_thread;
-// static pthread_mutex_t victory_mutex = PTHREAD_MUTEX_INITIALIZER;
-// static bool game_active = true;
+static pthread_t victory_thread;
+static pthread_mutex_t victory_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool game_active = true;
 
 //track most recent prompt (not including error messages)
 char * most_recent_prompt;
@@ -526,7 +521,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
 
 
 
-/**updateBoardAfterGuess
+/** updateBoardAfterGuess
  *  Function that updates the board based on the player's guess
  *  Takes a board, coordinates, bools giving information about the
  *  specified cell (to be updated), and the user's input window
@@ -598,25 +593,35 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
 
 
 
-/**checkVictory
- *  Function that iterates through all cells on the board, checking for any unsunk ship parts.
- *  If any cell is occupied by a ship and not marked as hit, the game is not over
+/**
+ * Function to check if all ships on a player's board have been sunk
+ * 
+ * @param board The player's game board
+ * @return true if all ships are sunk, false otherwise.
  */
-// bool checkVictory(board_t *board) {
-//     // Iterate through ever cell on the board
-//     for (int i = 1; i < NROWS+1; i++) {
-//         for (int j = 1; j < NCOLS+1; j++) {
-//             cell_t *cell = &board->array[i][j];
-//             //If any ship cell is not hit, the player has not lost yet
-//             if (cell->occupied && !cell->hit) {
-//                 return false;       // Found an unsunk ship part
-//             }
-//         }
-//     }
-//     return true;    // All ship parts are sunk
-// }
+bool checkVictory(board_t* board) {
+    bool hasShips = false;  // Flag to check if the board contains any ships
 
+    // Iterate through all cells on the board
+    for (int i = 1; i <= NROWS; i++) {
+        for (int j = 1; j <= NCOLS; j++) {
+            cell_t* cell = &board->array[i][j];
 
+            // Check if the cell is occupised by a ship
+            if (cell->occupied) {
+                hasShips = true;    // The board has at least one ship
+
+                // If any part of a ship is not hit, victory is false
+                if (!cell->hit) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    // Return true only if the board has ships and all are sunk
+    return hasShips;
+}
 
 /**initBoard
  *  Function that initializes a players game board by setting every cell to unoccupied, not 
@@ -650,36 +655,36 @@ void printStatus(board_t board, WINDOW * window, char* filename){
 
 
 
-/**hitOrMiss
- * takes an int array containing coordinates and a board, returns "HIT" if 
- * the cell specified is occupied and hasn't yet been guessed, "GUESSED" if
- * the cell specified has been guessed, and "MISS" if it's unoccupied and 
- * unguessed.
- * Assumptions: coordinates are valid and order is x,y and board is initialized, and a 10 is sent in as a 0
- */
-char * hitOrMiss(int attackCoordsArray[2], board_t * board){
-    int x = attackCoordsArray[0];
-    if(x==0)x=10;
+// /**hitOrMiss
+//  * takes an int array containing coordinates and a board, returns "HIT" if 
+//  * the cell specified is occupied and hasn't yet been guessed, "GUESSED" if
+//  * the cell specified has been guessed, and "MISS" if it's unoccupied and 
+//  * unguessed.
+//  * Assumptions: coordinates are valid and order is x,y and board is initialized, and a 10 is sent in as a 0
+//  */
+// char * hitOrMiss(int attackCoordsArray[2], board_t * board){
+//     int x = attackCoordsArray[0];
+//     if(x==0)x=10;
 
-    int y = attackCoordsArray[1];
-    if(y==0)y=10;
+//     int y = attackCoordsArray[1];
+//     if(y==0)y=10;
 
-    //save specified cell
-    cell_t cell = board->array[x][y];
+//     //save specified cell
+//     cell_t cell = board->array[x][y];
 
-    //if cell has already been guessed
-    if(cell.guessed) return "GUESSED";
+//     //if cell has already been guessed
+//     if(cell.guessed) return "GUESSED";
     
-    /*at this point, our cell has not been guessed, so return hit if occupied and 
-    miss otherwise, and update cell status accordingly*/
-    cell.guessed=true;
-    if(cell.occupied){
-        cell.hit = true;
-        return "HIT";
-    } else {
-        return "MISS";
-    }
-}
+//     /*at this point, our cell has not been guessed, so return hit if occupied and 
+//     miss otherwise, and update cell status accordingly*/
+//     cell.guessed=true;
+//     if(cell.occupied){
+//         cell.hit = true;
+//         return "HIT";
+//     } else {
+//         return "MISS";
+//     }
+// }
 
 /**
  * Cursor tracking thread to make sure the cursor resets
@@ -691,27 +696,37 @@ static void* cursor_tracking(void* arg) {
     WINDOW* prompt_win = (WINDOW*)arg;
 
     int maxy, maxx;
-    getmaxyx(prompt_win, maxy, maxx);       // Get prompt window size
+    getmaxyx(prompt_win, maxy, maxx); // Get prompt window size
 
     while (tracking_active) {
         pthread_mutex_lock(&cursor_mutex);
+
+        // Check if the cursor has reached or exceeded the bottom of the window
         if (cursor >= maxy - 1) {
             werase(prompt_win);     // Clear the window
-            box(prompt_win, 0, 0);  // Redraw the box'
-            if (strlen(most_recent_prompt) > 0) {
+            box(prompt_win, 0, 0);  // Redraw the box
+
+            // Print the most recent prompt at the top of the prompt window
+            if (most_recent_prompt && strlen(most_recent_prompt) > 0) {
                 mvwprintw(prompt_win, INIT_CURSOR, 1, "%s", most_recent_prompt);
-                cursor = INIT_CURSOR;
-            } else {
-                cursor = INIT_CURSOR + 1;
-                mvwprintw(prompt_win, INIT_CURSOR, 1, "%s", "If you are getting this error, we have a big fucking problem in 'cursor_tracking' from 'board.c'");
             }
-            wrefresh(prompt_win);   // Refresh the prompt window
+
+            // Reset the cursor to just below the most recent prompt
+            cursor = INIT_CURSOR + 1;
+
+            // Refresh the prompt window to reflect changes
+            wrefresh(prompt_win);
         }
-        
+
         pthread_mutex_unlock(&cursor_mutex);
+
+        // Sleep briefly to avoid consuming excessive CPU
+        usleep(100000); // 100 milliseconds
     }
+
     return NULL;
 }
+
 
 /** 
  * Start the thread to monitor and reset the prompt window 
@@ -732,52 +747,61 @@ void stop_cursor_tracking() {
 }
 
 /**
- * Victory tracking thread to monitor the game state and end the game when a player wins.
+ * Thread function to monitor the game state and ed the game when a player wins
  * 
- * @param arg An array of pointers to the two player boards.
+ * @param arg An array of pointers to the two player boards
  */
-// static void* victory_tracking(void* arg) {
-//     board_t** boards = (board_t**)arg;
-//     board_t* player1_board = boards[0];
-//     board_t* player2_board = boards[1];
+static void* victory_tracking(void* arg) {
+    board_t** boards = (board_t**)arg;
+    board_t* player1_board = boards[0];
+    board_t* player2_board = boards[1];
+    WINDOW* prompt_win = (WINDOW*)boards[2];
 
-//     while (game_active) {
-//         pthread_mutex_lock(&victory_mutex);
+    while (game_active) {
+        pthread_mutex_lock(&victory_mutex);
+
         // Check if Player 1 has won
-        // if (checkVictory(player2_board)) {
-        //     mvwprintw(stdscr, 1, 1, "Player 1 wins!");
-        //     wrefresh(stdscr);
-        //     game_active = false;
-        // }
-        // Check if Player 2 has won
-    //     else if (checkVictory(player1_board)) {
-    //         mvwprintw(stdscr, 1, 1, "Player 2 wins!");
-    //         wrefresh(stdscr);
-    //         game_active = false;
-    //     }
-    //     pthread_mutex_unlock(&victory_mutex);
-    // }
+        if (checkVictory(player2_board)) {
+            mvwprintw(prompt_win, 1, 1, "Player 1 wins!");
+            wrefresh(prompt_win);
+            game_active = false;
+        }
+        // Check if player 2 has won
+        else if (checkVictory(player1_board)) {
+            mvwprintw(prompt_win, 1, 1, "Player 2 wins!");
+            wrefresh(prompt_win);
+            game_active = false;
+        }
 
-//     return NULL;
-// }
+        pthread_mutex_unlock(&victory_mutex);
+
+        // Sleep briefly to avoid consuming excessive CPU
+        usleep(100000); // 100 milliseconds    
+    }
+
+    return NULL;
+}
 
 /**
- * Start the victory tracking thread.
- * 
+ * Start the victory-tracking thread.
+ *
  * @param player1_board The board of Player 1.
  * @param player2_board The board of Player 2.
  */
-// void start_victory_tracking(board_t* player1_board, board_t* player2_board) {
-//     board_t** boards = malloc(2 * sizeof(board_t*));
-//     boards[0] = player1_board;
-//     boards[1] = player2_board;
-//     pthread_create(&victory_thread, NULL, victory_tracking, boards);
-// }
+void start_victory_tracking(board_t* player1_board, board_t* player2_board, WINDOW* prompt_win) {
+    board_t** boards = malloc(3 * sizeof(board_t*));
+    boards[0] = player1_board;
+    boards[1] = player2_board;
+    boards[2] = (board_t*)prompt_win; 
+
+    game_active = true;
+    pthread_create(&victory_thread, NULL, victory_tracking, boards);
+}
 
 /**
- * Stop the victory tracking thread.
+ * Stop the victory-tracking thread.
  */
-// void stop_victory_tracking() {
-//     game_active = false;
-//     pthread_join(victory_thread, NULL);
-// }
+void stop_victory_tracking() {
+    game_active = false;
+    pthread_join(victory_thread, NULL);
+}

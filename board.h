@@ -1,10 +1,12 @@
 #pragma once
 #include <stdbool.h>
 #include <curses.h>
+#include <stddef.h>
 
 #define NROWS 10
 #define NCOLS 10
 #define NDIFSHIPS 5 //the number of different types of ships
+#define INIT_CURSOR 2 //vertical start index for the cursor of the user input window
 
 typedef struct shipType {
   char* name;
@@ -15,6 +17,9 @@ typedef struct shipType {
 //  a battleship of size 4, and an aircraft carrier of size 5.
 
 extern const shipType_t shipArray[];
+
+// Declare cursor as an external variable to prevent multiple definition errors
+extern size_t cursor;
 
 typedef struct cell{
     // coordinate coordinate;
@@ -53,9 +58,13 @@ bool checkBounds (struct shipLocation proposal);
 // Function to handle the logic of processing an attack on the opponent's board
 void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk, WINDOW * window);
 
-// Function that iterates through all cells on the board, checking for any unsunk ship parts.
-//      If any cell is occupied by a ship and not marked as hit, the game is not over
-bool checkVictory(board_t *board);
+/**
+ * Function to check if all ships on a player's board have been sunk
+ * 
+ * @param board The player's game board
+ * @return true if all ships are sunk, false otherwise.
+ */
+bool checkVictory(board_t* board);
 
 // Function that initializes a players game board
 void initBoard(board_t *board); 
@@ -70,7 +79,7 @@ int* validCoords(int * yay, WINDOW * window, char * prompt);
 
 board_t makeBoard(WINDOW * window, WINDOW * playerWindow);
 
-char * hitOrMiss(int attackCoordsArray[2], board_t * board);
+// char * hitOrMiss(int attackCoordsArray[2], board_t * board);
 
 /**
  * Start the thread to monitor and reset the prompt window 
@@ -84,14 +93,13 @@ void start_cursor_tracking(WINDOW* prompt_win);
  */
 void stop_cursor_tracking();
 
-
 /**
  * Start the victory tracking thread.
  * 
  * @param player1_board The board of Player 1.
  * @param player2_board The board of Player 2.
  */
-void start_victory_tracking(board_t* player1_board, board_t* player2_board);
+void start_victory_tracking(board_t* player1_board, board_t* player2_board, WINDOW* prompt_win);
 
 /**
  * Stop the victory tracking thread.
