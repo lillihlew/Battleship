@@ -660,6 +660,8 @@ void printStatus(board_t board, WINDOW * window, char* filename){
 
 
 
+
+
 // /**hitOrMiss
 //  * takes an int array containing coordinates and a board, returns "HIT" if 
 //  * the cell specified is occupied and hasn't yet been guessed, "GUESSED" if
