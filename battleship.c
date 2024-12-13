@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
  * @param port The port number the server will listen on
  */ 
 void run_server(unsigned short port) {
+    //FILE* serverInputCoordsFile = fopen("serverInputCoordsFile.txt", "w+");
     // Create and bind the server socket
     int server_socket_fd = server_socket_open(&port);
     if (server_socket_fd == -1) {
@@ -93,6 +94,7 @@ void run_server(unsigned short port) {
     mvwprintw(prompt_win, 1, 1, "**Place your ships**");
     wrefresh(prompt_win);
     player1_board = makeBoard(prompt_win, player_win);
+    initBoard(&player2_board);
     printStatus(player1_board, prompt_win, "p1Board.txt");
     // memcpy(&player1_board, (makeBoard(prompt_win, player_win)), ((sizeof(cell_t))*(NROWS+1)*(NCOLS+1)));
 
@@ -122,7 +124,6 @@ void run_server(unsigned short port) {
     // Main game loop
     bool game_running = true;
     while (game_running) {
-        FILE* serverInputCoordsFile = fopen("serverInputCoordsFile.txt", "w+");
         int attack_coords[2];
         int x, y;
 
@@ -151,11 +152,11 @@ void run_server(unsigned short port) {
         //null terminate the char array
         attack_coords_char[2] = '\0';
 
-        fprintf(serverInputCoordsFile, "hoping to send over attack coordinates: %s\n", attack_coords_char);
+       // fprintf(serverInputCoordsFile, "hoping to send over attack coordinates: %s\n", attack_coords_char);
 
         //send attack coordinates to client
         if(send_message(client_socket_fd, attack_coords_char)!=0){
-            fprintf(serverInputCoordsFile, "SEND MESSAGE ERROR\n");
+            //fprintf(serverInputCoordsFile, "SEND MESSAGE ERROR\n");
         }
         sleep(1);
 
@@ -166,10 +167,10 @@ void run_server(unsigned short port) {
 
         attack_result = receive_message(client_socket_fd);
         if(attack_result==NULL){
-            fprintf(serverInputCoordsFile, "RECEIVE MESSAGE ERROR\n");
+            //fprintf(serverInputCoordsFile, "RECEIVE MESSAGE ERROR\n");
         }
 
-        fprintf(serverInputCoordsFile, "received attack result: %s\n", attack_result);
+        //fprintf(serverInputCoordsFile, "received attack result: %s\n", attack_result);
 
         // Update the opponent's board window with the result
         player2_board.array[x][y].guessed = true;
@@ -204,9 +205,9 @@ void run_server(unsigned short port) {
 
         free(enemy_attack_string);
 
-        fprintf(serverInputCoordsFile, "received int array: %d%d\n", p2_attack_int[0], p2_attack_int[1]);
+        //fprintf(serverInputCoordsFile, "received int array: %d%d\n", p2_attack_int[0], p2_attack_int[1]);
 
-        // Update Player 1's board based on Player 2's attack (idk if this is necessary)
+        // Update Player 1's board based on Player 2's attack
         bool hit, sunk;
         updateBoardAfterGuess(&player1_board, p2_attack_int[0], p2_attack_int[1], &hit, &sunk, prompt_win);
 
@@ -226,14 +227,16 @@ void run_server(unsigned short port) {
         snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
 
         send_message(client_socket_fd, result_message);
-        fprintf(serverInputCoordsFile, "hoping to send over result message: %s\n", result_message);
+        //fprintf(serverInputCoordsFile, "hoping to send over result message: %s\n", result_message);
         // // Update the player's board window with the result
         // draw_player_board(player_win, player1_board.array);
-        fclose(serverInputCoordsFile);
+        //fclose(serverInputCoordsFile);
     }
 
     stop_cursor_tracking();
     // stop_victory_tracking();
+
+    //fclose(serverInputCoordsFile);
 
     // Close sockets and end curses
     close(client_socket_fd);
@@ -249,6 +252,7 @@ void run_server(unsigned short port) {
  * @param port        The port number the server is listening on.
  */
 void run_client(char* server_name, unsigned short port) {
+    //FILE* clientInputCoordsFile = fopen("clientInputCoordsFile.txt", "w+");
     // Connect to the server
     int socket_fd = socket_connect(server_name, port);
     if (socket_fd == -1) {
@@ -311,7 +315,6 @@ void run_client(char* server_name, unsigned short port) {
     // Main game loop
     bool game_running = true;
     while (game_running) {
-        FILE* clientInputCoordsFile = fopen("clientInputCoordsFile.txt", "w+");
         int attack_coords[2];
         int x, y;
 
@@ -321,10 +324,10 @@ void run_client(char* server_name, unsigned short port) {
 
         //receive enemy attack coordinates in string form and convert to ints
         char * enemy_attack_string = receive_message(socket_fd);
-        fprintf(clientInputCoordsFile, "received enemy_attack_string: %s with values %c,%c\n", enemy_attack_string, enemy_attack_string[0], enemy_attack_string[1]);
+        //fprintf(clientInputCoordsFile, "received enemy_attack_string: %s with values %c,%c\n", enemy_attack_string, enemy_attack_string[0], enemy_attack_string[1]);
         x = enemy_attack_string[0]-'0';
         y = enemy_attack_string[1]-'0';
-        fprintf(clientInputCoordsFile, "received attack_coords: %d,%d\n", x, y);
+        //fprintf(clientInputCoordsFile, "received attack_coords: %d,%d\n", x, y);
         free(enemy_attack_string);
 
         // Update Player 2's board based on Player 1's attack
@@ -337,7 +340,7 @@ void run_client(char* server_name, unsigned short port) {
         // Send attack result to Player 1
         char result_message[16];
         snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
-        fprintf(clientInputCoordsFile, "Attempting to send message: %s\n", result_message);
+        //fprintf(clientInputCoordsFile, "Attempting to send message: %s\n", result_message);
         send_message(socket_fd, result_message);
         sleep(1);
         
@@ -345,12 +348,12 @@ void run_client(char* server_name, unsigned short port) {
 
         // Player 2's turn
         wrefresh(prompt_win);
-        fprintf(clientInputCoordsFile, "NOW CALLING VALID COORDS FROM CLIENT\n");
+       // fprintf(clientInputCoordsFile, "NOW CALLING VALID COORDS FROM CLIENT\n");
         memcpy(attack_coords, validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): \0"), 2*sizeof(int));
         x = attack_coords[0];
         y = attack_coords[1];
-        fprintf(clientInputCoordsFile, "Valid attack coords FROM client have not been sent yet (x,y): %d,%d\n", x, y);
-        fprintf(clientInputCoordsFile, "Valid attack coords FROM client have not been sent yet (0,1): %d,%d\n", attack_coords[0], attack_coords[1]);
+       // fprintf(clientInputCoordsFile, "Valid attack coords FROM client have not been sent yet (x,y): %d,%d\n", x, y);
+       // fprintf(clientInputCoordsFile, "Valid attack coords FROM client have not been sent yet (0,1): %d,%d\n", attack_coords[0], attack_coords[1]);
         
         //make an array to store char values
         char  attack_coords_char[3];
@@ -367,7 +370,7 @@ void run_client(char* server_name, unsigned short port) {
         //null terminate char array
         attack_coords_char[2] = '\0';
         
-        fprintf(clientInputCoordsFile, "hoping to send over: %s\n", attack_coords_char);
+        //fprintf(clientInputCoordsFile, "hoping to send over: %s\n", attack_coords_char);
 
         // Send attack to Player 1
         send_message(socket_fd, attack_coords_char);
@@ -379,7 +382,7 @@ void run_client(char* server_name, unsigned short port) {
         char* attack_result = "INVALID";
         attack_result = receive_message(socket_fd);
 
-        fprintf(clientInputCoordsFile, "received: %s\n", attack_result);
+       // fprintf(clientInputCoordsFile, "received: %s\n", attack_result);
 
         mvwprintw(prompt_win, 1, 1, "You %s\n", attack_result);
         
@@ -392,7 +395,7 @@ void run_client(char* server_name, unsigned short port) {
         }
         draw_opponent_board(opponent_win, player1_board.array);
         free(attack_result);
-        fclose(clientInputCoordsFile);
+        //fclose(clientInputCoordsFile);
     }
 
     stop_cursor_tracking();
