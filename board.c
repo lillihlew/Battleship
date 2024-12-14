@@ -390,7 +390,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
     shipLocation_t proposal;
 
     //loop through the different types of ships using the ship array.
-    for (int i = 0; i < 2; i++){ 
+    for (int i = 0; i < NDIFSHIPS; i++){ 
         //If any validation checks fail, we will print an error message and restart the current iteration of the loop
 
         //save ship we're on as current
@@ -508,7 +508,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
     mvwprintw(window, cursor++, 1, "Board setup complete, enjoy the game!\n");
     free(most_recent_prompt);
     most_recent_prompt = strdup("Board setup complete, enjoy the game!\n");
-    free(most_recent_prompt);
+    // free(most_recent_prompt);
 
     //reset cursor to top of box
     cursor = INIT_CURSOR;
@@ -539,6 +539,8 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
     // Check if the coordinates are within the valid range of the board
     if (x < 1 || x > NCOLS || y < 1 || y > NROWS) {
         mvwprintw(window, cursor++, 1, "Invalid coordinates.\n");
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("Invalid coordinates.\n");
         return;
     }
 
@@ -548,6 +550,8 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
     // Check if the cell has already been guessed
     if (cell->guessed) {
         mvwprintw(window, cursor++, 1, "Cell has already been guessed.\n");
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("Cell has already been guessed.\n");
         return;
     }
 
@@ -577,12 +581,18 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
         // If all parts of the ship are hit, it is sunk, so update that boolean
         if (ship->sunk) {
             *isSunk = true;
-        mvwprintw(window, cursor++, 1, "Your %s has been sunk!", ship->name);
+        mvwprintw(window, cursor++, 1, "Your %s has been sunk!\n", ship->name);
+        free(most_recent_prompt);
+        sprintf(most_recent_prompt, "Your %s has been sunk!\n", ship->name);
         } else {
-            mvwprintw(window, cursor++, 1, "Your %s got hit!", ship->name);
+            mvwprintw(window, cursor++, 1, "Your %s got hit!\n", ship->name);
+            free(most_recent_prompt);
+            sprintf(most_recent_prompt, "Your %s got hit!\n", ship->name);
         }
     } else {
-        mvwprintw(window, cursor++, 1, "Your opponent missed!");
+        mvwprintw(window, cursor++, 1, "Your opponent missed!\n");
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("Your opponent missed!\n");
     }
 
     wrefresh(window);
