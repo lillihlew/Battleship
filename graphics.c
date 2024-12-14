@@ -8,6 +8,7 @@
 
 #include <pthread.h>
 #include "graphics.h"
+#include "curses.h"
 
 
 // static size_t cursor = 2;    // Starting cursor position
@@ -45,6 +46,9 @@ WINDOW* create_board_window(int start_x, int start_y, const char* title) {
     return win;
 }
 
+
+
+
 /**
  * Draws the player's board, showing ships and their current state.
  *
@@ -52,15 +56,58 @@ WINDOW* create_board_window(int start_x, int start_y, const char* title) {
  * @param board The player's game board array.
  */
 void draw_player_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]) {
-    for (int y = 1; y < NROWS + 1; y++) {
-        for (int x = 1; x < NCOLS + 1; x++) {
+    // use_default_colors();
+    initscr();
+    start_color();
+    int left_margin = 6;
+    int top_margin = 2;
+    int v_space_between_cells = 2;
+    init_pair(COLOR_GREEN, COLOR_GREEN, -1);
+    init_pair(1, COLOR_RED, -1);
+    init_pair(COLOR_BLUE, COLOR_BLUE, -1);
+    init_pair(COLOR_YELLOW, COLOR_YELLOW, -1);
+
+    for (int y = 0; y < NROWS + 1; y++) {
+        for (int x = 0; x < NCOLS + 1; x++) {
+            attron(COLOR_PAIR(0));
+            int color = 0;
             char symbol = '~'; // Default empty cell
-            if (board[x][y].guessed) {
-                symbol = board[x][y].hit ? 'H' : 'M'; // Hit or Miss
+            if(y==0){
+                attroff(COLOR_PAIR(color));
+                attron(COLOR_PAIR(COLOR_GREEN));
+                color = COLOR_GREEN;
+                if(x==0){
+                    symbol = ' ';
+                }else {
+                    symbol = 'A'+x-1;
+                }
+            }else if (x==0){
+                attroff(COLOR_PAIR(color));
+                attron(COLOR_PAIR(COLOR_GREEN));
+                color = COLOR_GREEN;
+                symbol = y+'0';
+            } else if (board[x][y].guessed) {
+                if(board[x][y].hit){
+                    symbol = 'H';
+                    attroff(COLOR_PAIR(color));
+                    attron(COLOR_PAIR(COLOR_RED));
+                    color=COLOR_RED;
+                }else{
+                    symbol = 'M';
+                    attroff(COLOR_PAIR(color));
+                    attron(COLOR_PAIR(COLOR_BLUE));
+                    color = COLOR_BLUE;
+                }
             } else if (board[x][y].occupied) {
                 symbol = 'S'; // Display ship
+                attroff(COLOR_PAIR(color));
+                attron(COLOR_PAIR(COLOR_YELLOW));
+                color = COLOR_YELLOW;
             }
-            mvwprintw(win, y + 1, x * 2, "%c", symbol); // Adjust cell spacing
+            if (symbol==':') {
+                mvwprintw(win, y + top_margin, x * v_space_between_cells + (left_margin-1), "%d  ", 10);
+            } else mvwprintw(win, y + top_margin, x * v_space_between_cells + left_margin, "%c  ", symbol); // Adjust cell spacing
+            attroff(COLOR_PAIR(color));
         }
     }
     wrefresh(win);
@@ -73,13 +120,27 @@ void draw_player_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]) {
  * @param board The opponent's game board array.
  */
 void draw_opponent_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]) {
-    for (int y = 1; y < NROWS + 1; y++) {
-        for (int x = 1; x < NCOLS + 1; x++) {
+    initscr();
+    start_color();
+    int left_margin = 6;
+    int top_margin = 2;
+    int v_space_between_cells = 2;
+
+    for (int y = 0; y < NROWS + 1; y++) {
+        for (int x = 0; x < NCOLS + 1; x++) {
             char symbol = '~'; // Default empty cell
-            if (board[x][y].guessed) {
+            if(y==0){
+                if(x==0){
+                    symbol = ' ';
+                }else symbol = 'A'+x-1;
+            }else if (x==0){
+                symbol = y+'0';
+            } else if (board[x][y].guessed) {
                 symbol = board[x][y].hit ? 'H' : 'M'; // Hit or Miss
             }
-            mvwprintw(win, y + 1, x * 2, "%c", symbol); // Adjust cell spacing
+            if (symbol==':') {
+                mvwprintw(win, y + top_margin, x * v_space_between_cells + (left_margin-1), "%d  ", 10);
+            } else mvwprintw(win, y + top_margin, x * v_space_between_cells + left_margin, "%c  ", symbol); // Adjust cell spacing
         }
     }
     wrefresh(win);
