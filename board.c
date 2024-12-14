@@ -505,7 +505,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
     }
     
     //print exit message
-    mvwprintw(window, 1, 1, "Board setup complete, enjoy the game!\n");
+    mvwprintw(window, cursor++, 1, "Board setup complete, enjoy the game!\n");
     free(most_recent_prompt);
     most_recent_prompt = strdup("Board setup complete, enjoy the game!\n");
     free(most_recent_prompt);

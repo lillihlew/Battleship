@@ -101,7 +101,7 @@ void run_server(unsigned short port) {
     wrefresh(opponent_win);
 
     // Player 1 places ships
-    mvwprintw(prompt_win, 1, 1, "**Place your ships**");
+    mvwprintw(prompt_win, cursor++, 1, "**Place your ships**");
     wrefresh(prompt_win);
     player1_board = makeBoard(prompt_win, player_win);
     printStatus(player1_board, prompt_win, "p1Board.txt");
@@ -115,7 +115,7 @@ void run_server(unsigned short port) {
     sleep(1);
 
     // Wait for the client to finish placing ships
-    mvwprintw(prompt_win, 1, 1, "Waiting for opponent to place ships...");
+    mvwprintw(prompt_win, cursor++, 1, "Waiting for opponent to place ships...");
     wrefresh(prompt_win);
 
     char* message = receive_message(client_socket_fd);
@@ -127,7 +127,8 @@ void run_server(unsigned short port) {
         end_curses();
         exit(EXIT_FAILURE);
     } else {
-        mvwprintw(prompt_win, 1, 1, "Opponent is ready! Starting game...");
+        wrefresh(prompt_win);
+        mvwprintw(prompt_win, cursor++, 1, "Opponent is ready! Starting game...");
         wrefresh(prompt_win);
         free(message);
         sleep(1);
@@ -143,7 +144,7 @@ void run_server(unsigned short port) {
         int x, y;
 
         // Player 1's turn
-        mvwprintw(prompt_win, 1, 1, "Your turn\n");
+        mvwprintw(prompt_win, cursor++, 1, "Your turn to attack!\n");
         wrefresh(prompt_win);
 
         // Get attack coords from user
@@ -173,19 +174,19 @@ void run_server(unsigned short port) {
         player2_board.array[x][y].guessed = true;
         if (strcmp(attack_result, "HIT") == 0) {
             player2_board.array[x][y].hit = true;
-            mvwprintw(prompt_win, 2, 1, "You hit a ship at %c,%d!", x + 'A' - 1, y);
+            mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!", x + 'A' - 1, y);
         } else if (strstr(attack_result, "sunk")) {
             player2_board.array[x][y].hit = true;
-            mvwprintw(prompt_win, 2, 1, "You sunk their ship at %c,%d!", x + 'A' - 1, y);
+            mvwprintw(prompt_win, cursor++, 1, "You sunk their ship at %c,%d!", x + 'A' - 1, y);
         } else {
-            mvwprintw(prompt_win, 2, 1, "You missed at %c,%d.", x + 'A' - 1, y);
+            mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
         }
         free(attack_result);
         draw_opponent_board(opponent_win, player2_board.array);
         wrefresh(prompt_win);
 
         // Player 2's turn
-        mvwprintw(prompt_win, 1, 1, "Waiting for Player 2's attack...\n");
+        mvwprintw(prompt_win, cursor++, 1, "Waiting for Player 2's attack...\n");
         wrefresh(prompt_win);
 
         // Receive attack from client
@@ -272,7 +273,7 @@ void run_client(char* server_name, unsigned short port) {
     wrefresh(opponent_win);
 
     // Player 2 places ships
-    mvwprintw(prompt_win, 1, 1, "**Place your ships**");
+    mvwprintw(prompt_win, cursor++, 1, "**Place your ships**");
     wrefresh(prompt_win);
     // memcpy(&player2_board, (makeBoard(prompt_win, player_win)), ((sizeof(cell_t))*(NROWS+1)*(NCOLS+1)));
     player2_board = makeBoard(prompt_win, player_win);
@@ -286,12 +287,12 @@ void run_client(char* server_name, unsigned short port) {
     sleep(1);
 
     // Wait for the server to finish placing ships
-    mvwprintw(prompt_win, 1, 1, "Waiting for opponent to place ships...");
+    mvwprintw(prompt_win, cursor++, 1, "Waiting for opponent to place ships...");
     wrefresh(prompt_win);
 
     char* message = receive_message(socket_fd);
     if (strcmp(message, "READY") != 0) {
-        mvwprintw(prompt_win, 1, 1, "Server not ready. Exiting.\n");
+        mvwprintw(prompt_win, cursor++, 1, "Server not ready. Exiting.\n");
         wrefresh(prompt_win);
         free(message);
         close(socket_fd);
@@ -300,7 +301,8 @@ void run_client(char* server_name, unsigned short port) {
         printf("'%s'\n", message);
         exit(EXIT_FAILURE);
     } else {
-        mvwprintw(prompt_win, 1, 1, "Opponent is ready! Starting game...");
+        wrefresh(prompt_win);
+        mvwprintw(prompt_win, cursor++, 1, "Opponent is ready! Starting game...");
         wrefresh(prompt_win);
         free(message);
         sleep(1);
@@ -316,7 +318,7 @@ void run_client(char* server_name, unsigned short port) {
         int x, y;
 
         // Player 1's turn
-        mvwprintw(prompt_win, 1, 1, "Waiting for Player 1's attack...\n");
+        mvwprintw(prompt_win, cursor++, 1, "Waiting for Player 1's attack...\n");
         wrefresh(prompt_win);
 
         // Receive enemy attack from player 1
@@ -345,7 +347,7 @@ void run_client(char* server_name, unsigned short port) {
         wrefresh(prompt_win);
         
         // Player 2's turn
-        mvwprintw(prompt_win, 1, 1, "Your turn to attack\n");
+        mvwprintw(prompt_win, cursor++, 1, "Your turn to attack\n");
         wrefresh(prompt_win);
 
         // Get attacks coords from user
@@ -375,12 +377,12 @@ void run_client(char* server_name, unsigned short port) {
         player1_board.array[x][y].guessed = true;
         if (strcmp(attack_result, "HIT") == 0) {
             player1_board.array[x][y].hit = true;
-            mvwprintw(prompt_win, 2, 1, "You hit a ship at %c,%d!", x + 'A' - 1, y);
+            mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!", x + 'A' - 1, y);
         } else if (strstr(attack_result, "sunk")) {
             player1_board.array[x][y].hit = true;
-            mvwprintw(prompt_win, 2, 1, "You sunk their ship at %c,%d!", x + 'A' - 1, y);
+            mvwprintw(prompt_win, cursor++, 1, "You sunk their ship at %c,%d!", x + 'A' - 1, y);
         } else {
-            mvwprintw(prompt_win, 2, 1, "You missed at %c,%d.", x + 'A' - 1, y);
+            mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
         }
         free(attack_result);
         draw_opponent_board(opponent_win, player1_board.array);
@@ -464,7 +466,7 @@ void player_leave(WINDOW* prompt_win, char* input, const char* leave_player, con
     if (strcasecmp(input, "Q") == 0) {
         // Ask the user for confirmation
         wclear(prompt_win);
-        mvwprintw(prompt_win, 1, 1, "Only losers rage quit. Are you sure you want to leave the game? (Y/N): ");
+        mvwprintw(prompt_win, cursor++, 1, "Only losers rage quit. Are you sure you want to leave the game? (Y/N): ");
         wrefresh(prompt_win);
 
         char confirm[256];
@@ -478,7 +480,7 @@ void player_leave(WINDOW* prompt_win, char* input, const char* leave_player, con
             send_message(socket_fd, quit_message);      // Notify the opposing player
 
             wclear(prompt_win);
-            mvwprintw(prompt_win, 1, 1, "Oh well...%s Wins!", oppo_player);
+            mvwprintw(prompt_win, cursor++, 1, "Oh well...%s Wins!", oppo_player);
             wrefresh(prompt_win);
             sleep(2);       // Pause before exiting
             end_curses();   // End the curses environment
@@ -486,7 +488,7 @@ void player_leave(WINDOW* prompt_win, char* input, const char* leave_player, con
         } else if (strcasecmp(confirm, "N") == 0) {
             // If not confirmed, clear the prompt and return to the last state of the game
             wclear(prompt_win);
-            mvwprintw(prompt_win, 1, 1, "Returning to the game...");
+            mvwprintw(prompt_win, cursor++, 1, "Returning to the game...");
             wrefresh(prompt_win);
             sleep(1);   // Pause for clarity
             wclear(prompt_win);
@@ -495,7 +497,7 @@ void player_leave(WINDOW* prompt_win, char* input, const char* leave_player, con
         } else {
             // Handle input during confirmation
             wclear(prompt_win);
-            mvwprintw(prompt_win, 1, 1, "Invalid response. Returning to the game...");
+            mvwprintw(prompt_win, cursor++, 1, "Invalid response. Returning to the game...");
             wrefresh(prompt_win);
             sleep(1);   // Pause for clarity
             wclear(prompt_win);

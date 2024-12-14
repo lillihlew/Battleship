@@ -6,7 +6,7 @@
 #define NROWS 10
 #define NCOLS 10
 #define NDIFSHIPS 5 //the number of different types of ships
-#define INIT_CURSOR 2 //vertical start index for the cursor of the user input window
+#define INIT_CURSOR 1 //vertical start index for the cursor of the user input window
 
 typedef struct shipType {
   char* name;
