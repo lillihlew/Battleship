@@ -194,7 +194,7 @@ enum Orientation validOrt(WINDOW * window){
  *  is more structured and complicated, most of this function is error checking.
  */
 int * validCoords(int * yay, WINDOW * window, char * prompt){
-
+    most_recent_prompt = strdup(prompt);
     //use this bool to control the while loop to loop until both coordinate values are valid
     bool supa = true; //we used the word valid too much in this method so we picked supa as the bool name
 
@@ -708,10 +708,10 @@ static void* cursor_tracking(void* arg) {
             // Print the most recent prompt at the top of the prompt window
             if (most_recent_prompt && strlen(most_recent_prompt) > 0) {
                 mvwprintw(prompt_win, INIT_CURSOR, 1, "%s", most_recent_prompt);
+                cursor = INIT_CURSOR + 1;   // Set the cursor just below the most recent prompt
+            } else {
+                cursor = INIT_CURSOR;
             }
-
-            // Reset the cursor to just below the most recent prompt
-            cursor = INIT_CURSOR + 1;
 
             // Refresh the prompt window to reflect changes
             wrefresh(prompt_win);
