@@ -3,6 +3,8 @@
  * 
  * Curses Library Guide - https://www.ibm.com/docs/en/aix/7.1?topic=concepts-curses-library
  * Charlie's worm lab - https://curtsinger.cs.grinnell.edu/teaching/2024F/CSC213/labs/worm/
+ * Boston recommended the wattron and wattroff methdos - we were STRUGGLING with getting 
+ *  color before they recommended those methods
  * 
  */
 
