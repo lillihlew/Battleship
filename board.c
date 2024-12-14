@@ -528,23 +528,24 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
  *  Takes a board, coordinates, bools giving information about the
  *  specified cell (to be updated), and the user's input window
  */
-void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk, WINDOW * window) {
+void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSunk, WINDOW *window) {
     *isHit = false;     // Initialize hit status as false
     *isSunk = false;    // Initialize sunk status as false
 
+    // Adjust for 0-based coords
     if (x==0) x = 10;
     if (y==0) y = 10;
 
-    // Validate coordinates to ensure they are within bounds and return if not
+    // Check if the coordinates are within the valid range of the board
     if (x < 1 || x > NCOLS || y < 1 || y > NROWS) {
         mvwprintw(window, cursor++, 1, "Invalid coordinates.\n");
         return;
     }
 
     // Get the cell at the specified coordinates
-    cell_t *cell = &board->array[x][y]; // Access the guessed cell
+    cell_t *cell = &board->array[x][y];
 
-    // Check if the cell has already been guessed and return if yes
+    // Check if the cell has already been guessed
     if (cell->guessed) {
         mvwprintw(window, cursor++, 1, "Cell has already been guessed.\n");
         return;
@@ -553,46 +554,30 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
     // Mark the cell as guessed
     cell->guessed = true;
 
-    // Check if the cell is occupied by a ship
+    // Check if the cell is occupied by part of a ship
     if (cell->occupied) {
-        //print user success
-        char letter = x + 'A' - 1;
-        mvwprintw(window, cursor++, 1, "You got hit at %c, %d!\n", letter, y);
+        *isHit = true;  // The attack is a hit
+        cell->hit = true;   // Mark the cell as hit
 
-        //update booleans
-        *isHit = true;
-        cell->hit = true;
+        shipType_t *ship = &cell->ship; // Get the ship occupying that cell
+        ship->sunk = true;      // Assume the ship is sunk until proven otherwise
 
-        // Save values for loop to check if the entire ship has been sunk
-        shipType_t *ship = &cell->ship;
-        ship->sunk = true;
-
-        /**
-         * Scan the board for any remaining parts of this ship and flip allCellsHit 
-         * if we find an un-hit cell from the same ship
-         */ 
+        // Iterate through the board to check if any part of the ship is not hit.
         for (int i = 1; i < NROWS+1; i++) {
             for (int j = 1; j < NCOLS+1; j++) {
                 if (board->array[i][j].occupied && board->array[i][j].ship.name == ship->name
                         && !board->array[i][j].hit) {
-                    ship->sunk = false;
+                    ship->sunk = false;     // The ship is not fully sunk
                     break;
                 }
             } 
-            if (!ship->sunk) break;
+            if (!ship->sunk) break;     // Exit the outer loop if the ship is not sunk
         }
 
         // If all parts of the ship are hit, it is sunk, so update that boolean
         if (ship->sunk) {
             *isSunk = true;
-            cell->ship.sunk = true;
-            mvwprintw(window, cursor++, 1, "Opponent sunk a %s", ship->name);
         }
-
-    } else {
-        char letter = x + 'A' - 1;
-        // If the cell is not occupied, it's a miss
-        mvwprintw(window, cursor++, 1, "Opponent missed at %c, %d!\n",letter,y);
     }
 }
 
