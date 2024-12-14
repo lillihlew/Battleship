@@ -5,6 +5,8 @@
 #include "battleship.h"
 
 size_t cursor = INIT_CURSOR;
+bool win = false;
+bool lose = false;
 
 int main(int argc, char *argv[]) {
     // Validate command-line arguments
@@ -162,6 +164,17 @@ void run_server(unsigned short port) {
         // Send attack coords to client
         send_message(client_socket_fd, attack_coords_char);
 
+
+
+        //HERE
+        //Expected format of the message:
+        //[SUNKwinAircraft Carrier]
+        //[rrrrwwwnnnnnnnnnnnnnnnn]
+        //[sunk, hit, or miss // win or empty // name of ship hit or empty]
+
+
+
+
         // Receive result of the attack
         char* attack_result = receive_message(client_socket_fd);
         if (!attack_result) {
@@ -170,17 +183,39 @@ void run_server(unsigned short port) {
             break;
         }
 
+        // const char *idx = strstr(txt, pat);
+            
+        //     if (idx != NULL) {
+
+
+
+
         // Update the opponent's board window with the result
         player2_board.array[x][y].guessed = true;
-        if (strcmp(attack_result, "HIT") == 0) {
+        if (strstr(attack_result, "HIT") != NULL) {
             player2_board.array[x][y].hit = true;
             mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!", x + 'A' - 1, y);
-        } else if (strstr(attack_result, "sunk")) {
+        }
+        if (strstr(attack_result, "sunk")!= NULL) {
             player2_board.array[x][y].hit = true;
-            mvwprintw(prompt_win, cursor++, 1, "You sunk their ship at %c,%d!", x + 'A' - 1, y);
-        } else {
+            char * sunkShipName="NULL";
+            for(int i = 0; i<NDIFSHIPS; i++){
+                if(strstr(attack_result, shipArray[i].name)!=NULL) {
+                    sunkShipName = shipArray[i].name;
+                }
+            }
+            mvwprintw(prompt_win, cursor++, 1, "You sunk their %s at %c,%d!", sunkShipName, x + 'A' - 1, y);
+        }
+        if (strstr(attack_result, "MISS") != NULL) {
             mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
         }
+
+        if(strstr(attack_result, "win") != NULL) win = true;
+
+
+
+
+
         free(attack_result);
         draw_opponent_board(opponent_win, player2_board.array);
         wrefresh(prompt_win);
@@ -207,9 +242,15 @@ void run_server(unsigned short port) {
         bool hit, sunk;
         updateBoardAfterGuess(&player1_board, p2_attack_int[0], p2_attack_int[1], &hit, &sunk, prompt_win);
 
+        //get sunkShipName if player sunk a ship
+        char* sunkShip = "NULL";
+        if(sunk){
+            sunkShip = player1_board.array[p2_attack_int[0]][p2_attack_int[1]].ship.name;
+        }
+
         // Send attack result to Player 2
-        char result_message[16];
-        snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
+        char result_message[25];
+        snprintf(result_message, sizeof(result_message), "%s%s%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "", lose ? "win" : "", sunkShip);
         send_message(client_socket_fd, result_message);
 
         draw_player_board(player_win, player1_board.array);
@@ -338,9 +379,14 @@ void run_client(char* server_name, unsigned short port) {
         bool hit, sunk;
         updateBoardAfterGuess(&player2_board, x, y, &hit, &sunk, prompt_win);
 
+        char* sunkShip = "NULL";
+        if(sunk){
+            sunkShip = player2_board.array[x][y].ship.name;
+        }
+
         // Send attack result to Player 1
-        char result_message[16];
-        snprintf(result_message, sizeof(result_message), "%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "");
+        char result_message[25];
+        snprintf(result_message, sizeof(result_message), "%s%s%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "", lose ? "win" : "", sunkShip);
         send_message(socket_fd, result_message);
 
         draw_player_board(player_win, player2_board.array);
@@ -375,15 +421,26 @@ void run_client(char* server_name, unsigned short port) {
 
         // Update opponent's board based on attack result
         player1_board.array[x][y].guessed = true;
-        if (strcmp(attack_result, "HIT") == 0) {
+        if (strstr(attack_result, "HIT") != NULL) {
             player1_board.array[x][y].hit = true;
             mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!", x + 'A' - 1, y);
-        } else if (strstr(attack_result, "sunk")) {
+        } 
+        if (strstr(attack_result, "sunk") != NULL) {
             player1_board.array[x][y].hit = true;
-            mvwprintw(prompt_win, cursor++, 1, "You sunk their ship at %c,%d!", x + 'A' - 1, y);
-        } else {
+            char* shipWeSunk = "NULL";
+            for(int i = 0; i<NDIFSHIPS; i++){
+                if(strstr(attack_result, shipArray[i].name)!=NULL) {
+                    shipWeSunk = shipArray[i].name;
+                }
+            }
+            mvwprintw(prompt_win, cursor++, 1, "You sunk their %s at %c,%d!", shipWeSunk, x + 'A' - 1, y);
+        }
+        if(strstr(attack_result, "MISS") != NULL) {
             mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
         }
+
+        if(strstr(attack_result, "win")!= NULL) lose = true;
+
         free(attack_result);
         draw_opponent_board(opponent_win, player1_board.array);
         wrefresh(prompt_win);
