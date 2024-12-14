@@ -390,7 +390,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
     shipLocation_t proposal;
 
     //loop through the different types of ships using the ship array.
-    for (int i = 0; i < NDIFSHIPS; i++){ 
+    for (int i = 0; i < 2; i++){ 
         //If any validation checks fail, we will print an error message and restart the current iteration of the loop
 
         //save ship we're on as current
@@ -577,8 +577,15 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
         // If all parts of the ship are hit, it is sunk, so update that boolean
         if (ship->sunk) {
             *isSunk = true;
+        mvwprintw(window, cursor++, 1, "Your %s has been sunk!", ship->name);
+        } else {
+            mvwprintw(window, cursor++, 1, "Your %s got hit!", ship->name);
         }
+    } else {
+        mvwprintw(window, cursor++, 1, "Your opponent missed!");
     }
+
+    wrefresh(window);
 }
 
 
