@@ -25,6 +25,13 @@ static bool game_active = true;
 //track most recent prompt (not including error messages)
 char * most_recent_prompt;
 
+//track space
+int space;
+
+//track win/lose
+bool win;
+bool lose;
+
 /**checkBounds
  *  checkBounds takes a player's proposal shipLocation (including origin, size, 
  *  and orientation) and returns true if the boundaries for the proposed ship 
@@ -120,7 +127,7 @@ enum Orientation validOrt(WINDOW * window){
     bool invalid = true;
     
     //save this value so that we can print to the correct horizontal cursor location
-    int space = strlen("Please input orientation (V/H): ")+1;
+    space = strlen("Please input orientation (V/H): ")+1;
 
     //provide user instructions
     mvwprintw(window, cursor, 1, "Please input orientation (V/H): ");
@@ -199,7 +206,7 @@ int * validCoords(int * yay, WINDOW * window, char * prompt){
     bool supa = true; //we used the word valid too much in this method so we picked supa as the bool name
 
     //save horizontal indentation for cursor 
-    int space = strlen(prompt)+1;
+    space = strlen(prompt)+1;
 
     //give user instructions
     mvwprintw(window, cursor, 1, "%s", prompt);
@@ -390,7 +397,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
     shipLocation_t proposal;
 
     //loop through the different types of ships using the ship array.
-    for (int i = 0; i < NDIFSHIPS; i++){ 
+    for (int i = 0; i < 2; i++){ 
         //If any validation checks fail, we will print an error message and restart the current iteration of the loop
 
         //save ship we're on as current
@@ -583,10 +590,16 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
             *isSunk = true;
         mvwprintw(window, cursor++, 1, "Your %s has been sunk!\n", ship->name);
         free(most_recent_prompt);
+        int strlength = strlen("Your  has been sunk!\n") + 1;
+        strlength += strlen(ship->name);
+        most_recent_prompt = malloc(sizeof(char)*strlength);
         sprintf(most_recent_prompt, "Your %s has been sunk!\n", ship->name);
         } else {
             mvwprintw(window, cursor++, 1, "Your %s got hit!\n", ship->name);
             free(most_recent_prompt);
+            int strlength = strlen("Your  has been sunk!\n") + 1;
+            strlength += strlen(ship->name);
+            most_recent_prompt = malloc(sizeof(char)*strlength);
             sprintf(most_recent_prompt, "Your %s got hit!\n", ship->name);
         }
     } else {
@@ -608,6 +621,7 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
  */
 bool checkVictory(board_t* board) {
     bool hasShips = false;  // Flag to check if the board contains any ships
+    bool allSunk = true;
 
     // Iterate through all cells on the board
     for (int i = 1; i <= NROWS; i++) {
@@ -620,12 +634,20 @@ bool checkVictory(board_t* board) {
 
                 // If any part of a ship is not hit, victory is false
                 if (!cell->hit) {
+                    allSunk = false;
                     return false;
                 }
             }
         }
     }
 
+    if(allSunk){
+        FILE* file = fopen("finishMakeBoard.txt", "w+");
+        fprintf(file, "flipping lose to true in checkVictory: before: %d\n", lose);
+        lose = true;
+        fprintf(file, "flipping lose to true in checkVictory: after: %d\n", lose);
+        fclose(file);
+    }
     // Return true only if the board has ships and all are sunk
     return hasShips;
 }
@@ -719,6 +741,8 @@ static void* cursor_tracking(void* arg) {
             if (most_recent_prompt && strlen(most_recent_prompt) > 0) {
                 mvwprintw(prompt_win, INIT_CURSOR, 1, "%s", most_recent_prompt);
                 cursor = INIT_CURSOR + 1;   // Set the cursor just below the most recent prompt
+                if((strstr(most_recent_prompt, "A,1") != NULL) ||(strstr(most_recent_prompt, "V/H") != NULL))  cursor = INIT_CURSOR;
+                space = strlen(most_recent_prompt) + 1;
             } else {
                 cursor = INIT_CURSOR;
             }
@@ -771,16 +795,41 @@ static void* victory_tracking(void* arg) {
 
         // Check if Player 1 has won
         if (checkVictory(player2_board)) {
+            werase(prompt_win);
+            box(prompt_win, 0, 0);
+            FILE* file = fopen("losedebugging.txt", "w+");
+            fprintf(file, "p1 won flipping lose to true in victory_tracking: before: %d\n", lose);
+            lose = true;
+            fprintf(file, "p1 won flipping lose to true in victory_tracking: after: %d\n", lose);
+            fclose(file);
             mvwprintw(prompt_win, 1, 1, "Player 1 wins!");
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("Player 1 wins!");
             wrefresh(prompt_win);
             game_active = false;
         }
         // Check if player 2 has won
         else if (checkVictory(player1_board)) {
+            werase(prompt_win);
+            box(prompt_win, 0, 0);
+            FILE* file = fopen("losedebugging.txt", "w+");
+            fprintf(file, "p2 won flipping lose to true in victory_tracking: before: %d\n", lose);
+            lose = true;
+            fprintf(file, "p2 won flipping lose to true in victory_tracking: after: %d\n", lose);
+            fclose(file);
             mvwprintw(prompt_win, 1, 1, "Player 2 wins!");
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("Player 2 wins!");
             wrefresh(prompt_win);
             game_active = false;
         }
+
+        // if(win){
+        //     mvwprintw(prompt_win, 1, 1, "You win!");
+        //     free(most_recent_prompt);
+        //     most_recent_prompt = strdup("You win!");
+        //     wrefresh(prompt_win);
+        // }
 
         pthread_mutex_unlock(&victory_mutex);
 

@@ -5,8 +5,9 @@
 #include "battleship.h"
 
 size_t cursor = INIT_CURSOR;
-bool win = false;
-bool lose = false;
+// bool win;
+// bool lose;
+
 
 int main(int argc, char *argv[]) {
     // Validate command-line arguments
@@ -48,6 +49,8 @@ int main(int argc, char *argv[]) {
  * @param port The port number the server will listen on
  */ 
 void run_server(unsigned short port) {
+    win = false;
+    lose = false;
     //FILE* serverInputCoordsFile = fopen("serverInputCoordsFile.txt", "w+");
     // Create and bind the server socket
     int server_socket_fd = server_socket_open(&port);
@@ -147,9 +150,12 @@ void run_server(unsigned short port) {
 
         // Player 1's turn
         mvwprintw(prompt_win, cursor++, 1, "Your turn to attack!\n");
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("Your turn to attack!\n");
         wrefresh(prompt_win);
 
         // Get attack coords from user
+        free(most_recent_prompt);
         memcpy(attack_coords, validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): \0"), 2*sizeof(int));
         x = attack_coords[0];  // Row index
         y = attack_coords[1];  // Column index
@@ -195,6 +201,10 @@ void run_server(unsigned short port) {
         if (strstr(attack_result, "HIT") != NULL) {
             player2_board.array[x][y].hit = true;
             mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!", x + 'A' - 1, y);
+            free(most_recent_prompt);
+            int strlength = strlen("You hit a ship at  , !") + 3 + 1;
+            most_recent_prompt = malloc(sizeof(char)*strlength);
+            sprintf(most_recent_prompt, "You hit a ship at %c,%d!", x + 'A' - 1, y);
         }
         if (strstr(attack_result, "sunk")!= NULL) {
             player2_board.array[x][y].hit = true;
@@ -205,16 +215,33 @@ void run_server(unsigned short port) {
                 }
             }
             mvwprintw(prompt_win, cursor++, 1, "You sunk their %s at %c,%d!", sunkShipName, x + 'A' - 1, y);
+            free(most_recent_prompt);
+            int strlength = strlen("You sunk their at  , !") + 3 + 1 + strlen(sunkShipName);
+            most_recent_prompt = malloc(sizeof(char)*strlength);
+            sprintf(most_recent_prompt, "You sunk their %s at %c,%d!", sunkShipName, x + 'A' - 1, y);
         }
         if (strstr(attack_result, "MISS") != NULL) {
             mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
+            free(most_recent_prompt);
+            int strlength = strlen("You missed at , !") + 3 + 1;
+            most_recent_prompt = malloc(sizeof(char)*strlength);
+            sprintf(most_recent_prompt, "You missed at %c,%d.", x + 'A' - 1, y);
         }
 
-        if(strstr(attack_result, "win") != NULL) win = true;
-
-
-
-
+        if(strstr(attack_result, "win") != NULL){
+            win = true;
+            FILE * serverFile = fopen("serverInputCoordsFile.txt", "w+");
+            fprintf(serverFile, "received 'win' so I won\n");
+            fprintf(serverFile, "win and lose: %d and %d (1 is true)\n", win, lose);
+            sleep(1);
+            fprintf(serverFile, "win and lose: %d and %d (1 is true)\n", win, lose);
+            fclose(serverFile);
+        //     // werase(prompt_win);
+        //     // box(prompt_win, 0, 0);
+        //     // mvwprintw(prompt_win, 1, 1, "Player 2 wins. Better luck next time!");
+        //     // free(most_recent_prompt);
+        //     // most_recent_prompt = strdup("Player 2 wins. Better luck next time!");
+        }
 
         free(attack_result);
         draw_opponent_board(opponent_win, player2_board.array);
@@ -222,6 +249,8 @@ void run_server(unsigned short port) {
 
         // Player 2's turn
         mvwprintw(prompt_win, cursor++, 1, "Waiting for Player 2's attack...\n");
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("Waiting for Player 2's attack...\n");
         wrefresh(prompt_win);
 
         // Receive attack from client
@@ -240,17 +269,22 @@ void run_server(unsigned short port) {
 
         // Update Player 1's board with attack results
         bool hit, sunk;
+        FILE * serverFile = fopen("serverInputCoordsFile.txt", "w+");
+        fprintf(serverFile, "lose value before updateBoard: %d \n", lose);
         updateBoardAfterGuess(&player1_board, p2_attack_int[0], p2_attack_int[1], &hit, &sunk, prompt_win);
 
         //get sunkShipName if player sunk a ship
         char* sunkShip = "NULL";
         if(sunk){
+            sleep(1); //hopefully letting checkVictory update lose to true right here
             sunkShip = player1_board.array[p2_attack_int[0]][p2_attack_int[1]].ship.name;
         }
 
         // Send attack result to Player 2
         char result_message[25];
         snprintf(result_message, sizeof(result_message), "%s%s%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "", lose ? "win" : "", sunkShip);
+        fprintf(serverFile, "sending win if 1: %d \n", lose);
+        fclose(serverFile);
         send_message(client_socket_fd, result_message);
 
         draw_player_board(player_win, player1_board.array);
@@ -275,6 +309,8 @@ void run_server(unsigned short port) {
  * @param port        The port number the server is listening on.
  */
 void run_client(char* server_name, unsigned short port) {
+    win = false;
+    lose = false;
     //FILE* clientInputCoordsFile = fopen("clientInputCoordsFile.txt", "w+");
     // Connect to the server
     int socket_fd = socket_connect(server_name, port);
@@ -360,6 +396,8 @@ void run_client(char* server_name, unsigned short port) {
 
         // Player 1's turn
         mvwprintw(prompt_win, cursor++, 1, "Waiting for Player 1's attack...\n");
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("Waiting for Player 1's attack...\n");
         wrefresh(prompt_win);
 
         // Receive enemy attack from player 1
@@ -381,12 +419,17 @@ void run_client(char* server_name, unsigned short port) {
 
         char* sunkShip = "NULL";
         if(sunk){
+            sleep(1); //hopefully checkVictory updates lose to true right here
             sunkShip = player2_board.array[x][y].ship.name;
         }
 
         // Send attack result to Player 1
         char result_message[25];
+        FILE * clientFile = fopen("clientInputCoordsFile.txt", "w+");
+        fprintf(clientFile, "lose value before updateBoard: %d \n", lose);
         snprintf(result_message, sizeof(result_message), "%s%s%s%s", hit ? "HIT" : "MISS", sunk ? " (sunk)" : "", lose ? "win" : "", sunkShip);
+        fprintf(clientFile, "sending win if 1: %d \n", lose);
+        fclose(clientFile);
         send_message(socket_fd, result_message);
 
         draw_player_board(player_win, player2_board.array);
@@ -394,9 +437,12 @@ void run_client(char* server_name, unsigned short port) {
         
         // Player 2's turn
         mvwprintw(prompt_win, cursor++, 1, "Your turn to attack\n");
+        free(most_recent_prompt);
+        most_recent_prompt = strdup("Your turn to attack\n");
         wrefresh(prompt_win);
 
         // Get attacks coords from user
+        free(most_recent_prompt);
         memcpy(attack_coords, validCoords(attack_coords, prompt_win, "Please input attack coordinates (ex: A,1): \0"), 2*sizeof(int));
         x = attack_coords[0];   // Row index
         y = attack_coords[1];   // Column index
@@ -424,6 +470,10 @@ void run_client(char* server_name, unsigned short port) {
         if (strstr(attack_result, "HIT") != NULL) {
             player1_board.array[x][y].hit = true;
             mvwprintw(prompt_win, cursor++, 1, "You hit a ship at %c,%d!", x + 'A' - 1, y);
+            free(most_recent_prompt);
+            int strlength = strlen("You hit a ship at  , !") + 3 + 1;
+            most_recent_prompt = malloc(sizeof(char)*strlength);
+            sprintf(most_recent_prompt, "You hit a ship at %c,%d!", x + 'A' - 1, y);
         } 
         if (strstr(attack_result, "sunk") != NULL) {
             player1_board.array[x][y].hit = true;
@@ -434,12 +484,33 @@ void run_client(char* server_name, unsigned short port) {
                 }
             }
             mvwprintw(prompt_win, cursor++, 1, "You sunk their %s at %c,%d!", shipWeSunk, x + 'A' - 1, y);
+            free(most_recent_prompt);
+            int strlength = strlen("You sunk their  at  , !") + 3 + 1 + strlen(shipWeSunk);
+            most_recent_prompt = malloc(sizeof(char)*strlength);
+            sprintf(most_recent_prompt, "You sunk their %s at %c,%d!", shipWeSunk, x + 'A' - 1, y);
         }
         if(strstr(attack_result, "MISS") != NULL) {
             mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
+            free(most_recent_prompt);
+            int strlength = strlen("You missed at  , !") + 3 + 1;
+            most_recent_prompt = malloc(sizeof(char)*strlength);
+            sprintf(most_recent_prompt, "You missed at %c,%d.", x + 'A' - 1, y);
         }
 
-        if(strstr(attack_result, "win")!= NULL) lose = true;
+        if(strstr(attack_result, "win")!= NULL){
+            win = true;
+            FILE * clientFile = fopen("clientInputCoordsFile.txt", "w+");
+            fprintf(clientFile, "received 'win' so I won\n");
+            fprintf(clientFile, "win and lose: %d and %d (1 is true)\n", win, lose);
+            sleep(1);
+            fprintf(clientFile, "win and lose: %d and %d (1 is true)\n", win, lose);
+            fclose(clientFile);
+        //     // werase(prompt_win);
+        //     // box(prompt_win, 0, 0);
+        //     // mvwprintw(prompt_win, 1, 1, "Player 1 wins. Better luck next time!");
+        //     // free(most_recent_prompt);
+        //     // most_recent_prompt = strdup("Player 1 wins. Better luck next time!");
+        }
 
         free(attack_result);
         draw_opponent_board(opponent_win, player1_board.array);
@@ -449,6 +520,9 @@ void run_client(char* server_name, unsigned short port) {
     // Stop the tracking threads
     stop_victory_tracking();
     stop_cursor_tracking();
+
+    //free global most recent prompt variable
+    // free(most_recent_prompt);
 
     // Close the connection and end curses
     close(socket_fd);

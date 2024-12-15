@@ -1,5 +1,5 @@
 .nfs*
 /battleship
-battleship.dSYM/
+battleship.dSYM/*
 *.txt
 *.zip

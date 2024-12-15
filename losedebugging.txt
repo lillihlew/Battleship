@@ -1,0 +1,2 @@
+p1 won flipping lose to true in victory_tracking: before: 1
+p1 won flipping lose to true in victory_tracking: after: 1

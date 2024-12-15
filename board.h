@@ -22,6 +22,11 @@ extern const shipType_t shipArray[];
 // Declare cursor as an external variable to prevent multiple definition errors
 extern size_t cursor;
 
+extern bool lose;
+extern bool win;
+extern char * most_recent_prompt;
+extern int space;
+
 typedef struct cell{
     // coordinate coordinate;
     bool occupied;
