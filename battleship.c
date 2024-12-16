@@ -190,6 +190,10 @@ void run_server(unsigned short port) {
             break;
         }
 
+        //handle case that we already guessed this location
+        bool alreadyGuessed = false;
+        if(player2_board.array[x][y].guessed) alreadyGuessed=true;
+
         // Update the opponent's board window and our prompt window with the results
         player2_board.array[x][y].guessed = true;
         //if we hit
@@ -220,11 +224,19 @@ void run_server(unsigned short port) {
         }
         //if we missed
         if (strstr(attack_result, "MISS") != NULL) {
-            mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
-            free(most_recent_prompt);
-            int strlength = strlen("You missed at , !") + 3 + 1;
-            most_recent_prompt = malloc(sizeof(char)*strlength);
-            sprintf(most_recent_prompt, "You missed at %c,%d.", x + 'A' - 1, y);
+            if(alreadyGuessed){
+                mvwprintw(prompt_win, cursor++, 1, "You already guessed %c,%d. Opponent's turn.", x + 'A' - 1, y);
+                free(most_recent_prompt);
+                int strlength = strlen("You already guessed  , . Opponent's turn.") + 3 + 1;
+                most_recent_prompt = malloc(sizeof(char)*strlength);
+                sprintf(most_recent_prompt, "You already guessed %c,%d. Opponent's turn.", x + 'A' - 1, y);
+            }else{
+                mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
+                free(most_recent_prompt);
+                int strlength = strlen("You missed at  , .") + 3 + 1;
+                most_recent_prompt = malloc(sizeof(char)*strlength);
+                sprintf(most_recent_prompt, "You missed at %c,%d.", x + 'A' - 1, y);
+            }
         }
         free(attack_result);
 
@@ -478,6 +490,10 @@ void run_client(char* server_name, unsigned short port) {
             break;
         }
 
+        //Handle the case that we already guessed this location
+        bool alreadyGuessed = false;
+        if(player1_board.array[x][y].guessed) alreadyGuessed=true;
+
         // Update opponent's board based on attack result
         player1_board.array[x][y].guessed = true;
         //if we hit
@@ -508,11 +524,19 @@ void run_client(char* server_name, unsigned short port) {
         }
         //if we missed
         if(strstr(attack_result, "MISS") != NULL) {
-            mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
-            free(most_recent_prompt);
-            int strlength = strlen("You missed at  , !") + 3 + 1;
-            most_recent_prompt = malloc(sizeof(char)*strlength);
-            sprintf(most_recent_prompt, "You missed at %c,%d.", x + 'A' - 1, y);
+            if(alreadyGuessed){
+                mvwprintw(prompt_win, cursor++, 1, "You already guessed %c,%d. Opponent's turn.", x + 'A' - 1, y);
+                free(most_recent_prompt);
+                int strlength = strlen("You already guessed  , . Opponent's turn.") + 3 + 1;
+                most_recent_prompt = malloc(sizeof(char)*strlength);
+                sprintf(most_recent_prompt, "You already guessed %c,%d. Opponent's turn.", x + 'A' - 1, y);
+            }else{
+                mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
+                free(most_recent_prompt);
+                int strlength = strlen("You missed at  , !") + 3 + 1;
+                most_recent_prompt = malloc(sizeof(char)*strlength);
+                sprintf(most_recent_prompt, "You missed at %c,%d.", x + 'A' - 1, y);
+            }
         }
         free(attack_result);
 
