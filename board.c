@@ -582,10 +582,16 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
             *isSunk = true;
         mvwprintw(window, cursor++, 1, "Your %s has been sunk!\n", ship->name);
         free(most_recent_prompt);
+        int strlength = strlen("Your  has been sunk!\n") + 1;
+        strlength += strlen(ship->name);
+        most_recent_prompt = malloc(sizeof(char)*strlength);
         sprintf(most_recent_prompt, "Your %s has been sunk!\n", ship->name);
         } else {
             mvwprintw(window, cursor++, 1, "Your %s got hit!\n", ship->name);
             free(most_recent_prompt);
+            int strlength = strlen("Your  has been sunk!\n") + 1;
+            strlength += strlen(ship->name);
+            most_recent_prompt = malloc(sizeof(char)*strlength);
             sprintf(most_recent_prompt, "Your %s got hit!\n", ship->name);
         }
     } else {
@@ -775,6 +781,8 @@ static void* victory_tracking(void* arg) {
             werase(prompt_win);
             box(prompt_win, 0, 0);
             mvwprintw(prompt_win, 1, 1, "Player 1 wins!");
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("Player 1 wins!");
             wrefresh(prompt_win);
             game_active = false;
         }
@@ -783,6 +791,8 @@ static void* victory_tracking(void* arg) {
              werase(prompt_win);
             box(prompt_win, 0, 0);
             mvwprintw(prompt_win, 1, 1, "Player 2 wins!");
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("Player 2 wins!");
             wrefresh(prompt_win);
             game_active = false;
         }
