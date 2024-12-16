@@ -14,16 +14,21 @@ const shipType_t shipArray[NDIFSHIPS] = {{"Destroyer", 2} ,{"Submarine",3} ,{"Cr
 //number of characters we read in at a time 
 #define BUFFERSIZE 4
 
+//prep cursor tracking thread
 static pthread_t cursor_thread;
 static pthread_mutex_t cursor_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool tracking_active = true;
 
+//prep victory (which is really checking for the other player's victory) thread
 static pthread_t victory_thread;
 static pthread_mutex_t victory_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool game_active = true;
 
 //track most recent prompt (not including error messages)
 char * most_recent_prompt;
+
+//track space
+int space;
 
 /**checkBounds
  *  checkBounds takes a player's proposal shipLocation (including origin, size, 
@@ -120,7 +125,7 @@ enum Orientation validOrt(WINDOW * window){
     bool invalid = true;
     
     //save this value so that we can print to the correct horizontal cursor location
-    int space = strlen("Please input orientation (V/H): ")+1;
+    space = strlen("Please input orientation (V/H): ")+1;
 
     //provide user instructions
     mvwprintw(window, cursor, 1, "Please input orientation (V/H): ");
@@ -337,9 +342,6 @@ int * validCoords(int * yay, WINDOW * window, char * prompt){
                 supa=false;
                 int validCoordinates[2] = {intLetter, possibleN};
                 yay=validCoordinates;
-                // FILE* serverInputCoordsFile = fopen("serverInputCoordsFile.txt", "w+");
-                // fprintf(serverInputCoordsFile, "coords in yay: %d,%d\n", yay[0], yay[1]);
-                // fclose(serverInputCoordsFile);
                 return yay;
             }
         }else{
@@ -453,6 +455,7 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
             i--;
             continue;
         } else {
+            //initialize cells to be occupied with whichever ship type and set the ship's sunk value to false.
             for (int i = 0; i < proposal.shipType.size; i++){
                 if (bigO == VERTICAL){
                     board.array[proposal.startx][proposal.starty + i].occupied = true;
@@ -512,10 +515,6 @@ board_t makeBoard(WINDOW * window, WINDOW * playerWindow){
 
     //reset cursor to top of box
     cursor = INIT_CURSOR;
-    
-    FILE* boardContent = fopen("finishMakeBoard.txt", "w+");
-    fprintf(boardContent, "Make Board exiting\n");
-    fclose(boardContent);
 
     //return initialized box
     return board;
@@ -625,7 +624,6 @@ bool checkVictory(board_t* board) {
             }
         }
     }
-
     // Return true only if the board has ships and all are sunk
     return hasShips;
 }
@@ -711,7 +709,8 @@ static void* cursor_tracking(void* arg) {
         pthread_mutex_lock(&cursor_mutex);
 
         // Check if the cursor has reached or exceeded the bottom of the window
-        if (cursor >= maxy - 1) {
+        if (cursor >= maxy - 2) {
+            sleep(2);
             werase(prompt_win);     // Clear the window
             box(prompt_win, 0, 0);  // Redraw the box
 
@@ -719,6 +718,8 @@ static void* cursor_tracking(void* arg) {
             if (most_recent_prompt && strlen(most_recent_prompt) > 0) {
                 mvwprintw(prompt_win, INIT_CURSOR, 1, "%s", most_recent_prompt);
                 cursor = INIT_CURSOR + 1;   // Set the cursor just below the most recent prompt
+                if((strstr(most_recent_prompt, "A,1") != NULL) ||(strstr(most_recent_prompt, "V/H") != NULL))  cursor = INIT_CURSOR;
+                space = strlen(most_recent_prompt) + 1;
             } else {
                 cursor = INIT_CURSOR;
             }
@@ -771,17 +772,20 @@ static void* victory_tracking(void* arg) {
 
         // Check if Player 1 has won
         if (checkVictory(player2_board)) {
+            werase(prompt_win);
+            box(prompt_win, 0, 0);
             mvwprintw(prompt_win, 1, 1, "Player 1 wins!");
             wrefresh(prompt_win);
             game_active = false;
         }
         // Check if player 2 has won
         else if (checkVictory(player1_board)) {
+             werase(prompt_win);
+            box(prompt_win, 0, 0);
             mvwprintw(prompt_win, 1, 1, "Player 2 wins!");
             wrefresh(prompt_win);
             game_active = false;
         }
-
         pthread_mutex_unlock(&victory_mutex);
 
         // Sleep briefly to avoid consuming excessive CPU
