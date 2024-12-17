@@ -258,7 +258,7 @@ void run_server(unsigned short port) {
             free(most_recent_prompt);
             most_recent_prompt = strdup("Exiting...");
             wrefresh(prompt_win);
-            sleep(10);
+            sleep(5);
             continue;
         }
 
@@ -558,7 +558,7 @@ void run_client(char* server_name, unsigned short port) {
             free(most_recent_prompt);
             most_recent_prompt = strdup("Exiting...");
             wrefresh(prompt_win);
-            sleep(10);
+            sleep(5);
             continue;
         }
 

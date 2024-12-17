@@ -780,21 +780,37 @@ static void* victory_tracking(void* arg) {
         if (checkVictory(player2_board)) {
             werase(prompt_win);
             box(prompt_win, 0, 0);
-            mvwprintw(prompt_win, 1, 1, "Player 1 wins!");
+            mvwprintw(prompt_win, 1, 1, "You lost...Player 1 wins!");
             free(most_recent_prompt);
-            most_recent_prompt = strdup("Player 1 wins!");
+            most_recent_prompt = strdup("You lost...Player 1 wins!");
+            wrefresh(prompt_win);
+            mvwprintw(prompt_win, cursor++, 1, "Exiting...");
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("Exiting...");
             wrefresh(prompt_win);
             game_active = false;
+
+            sleep(5);
+            end_curses();
+            exit(0);
         }
         // Check if player 2 has won
         else if (checkVictory(player1_board)) {
              werase(prompt_win);
             box(prompt_win, 0, 0);
-            mvwprintw(prompt_win, 1, 1, "Player 2 wins!");
+            mvwprintw(prompt_win, 1, 1, "You lost...Player 2 wins!");
             free(most_recent_prompt);
-            most_recent_prompt = strdup("Player 2 wins!");
+            most_recent_prompt = strdup("You lost...Player 2 wins!");
+            wrefresh(prompt_win);
+            mvwprintw(prompt_win, cursor++, 1, "Exiting...");
+            free(most_recent_prompt);
+            most_recent_prompt = strdup("Exiting...");
             wrefresh(prompt_win);
             game_active = false;
+
+            sleep(5);
+            end_curses();
+            exit(0);
         }
         pthread_mutex_unlock(&victory_mutex);
 
