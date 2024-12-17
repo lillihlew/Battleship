@@ -548,9 +548,9 @@ void updateBoardAfterGuess(board_t *board, int x, int y, bool *isHit, bool *isSu
 
     // Check if the cell has already been guessed
     if (cell->guessed) {
-        mvwprintw(window, cursor++, 1, "Cell has already been guessed.\n");
+        mvwprintw(window, cursor++, 1, "Your opponent guessed an already guessed cell...They lost a turn!\n");
         free(most_recent_prompt);
-        most_recent_prompt = strdup("Cell has already been guessed.\n");
+        most_recent_prompt = strdup("Your opponent guessed an already guessed cell...They lost a turn!\n");
         return;
     }
 

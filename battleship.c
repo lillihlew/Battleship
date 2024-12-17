@@ -225,11 +225,11 @@ void run_server(unsigned short port) {
         //if we missed
         if (strstr(attack_result, "MISS") != NULL) {
             if(alreadyGuessed){
-                mvwprintw(prompt_win, cursor++, 1, "You already guessed %c,%d. Opponent's turn.", x + 'A' - 1, y);
+                mvwprintw(prompt_win, cursor++, 1, "You already guessed %c,%d. You lose a turn!", x + 'A' - 1, y);
                 free(most_recent_prompt);
                 int strlength = strlen("You already guessed  , . Opponent's turn.") + 3 + 1;
                 most_recent_prompt = malloc(sizeof(char)*strlength);
-                sprintf(most_recent_prompt, "You already guessed %c,%d. Opponent's turn.", x + 'A' - 1, y);
+                sprintf(most_recent_prompt, "You already guessed %c,%d. You lose a turn!", x + 'A' - 1, y);
             }else{
                 mvwprintw(prompt_win, cursor++, 1, "You missed at %c,%d.", x + 'A' - 1, y);
                 free(most_recent_prompt);
