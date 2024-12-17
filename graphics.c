@@ -10,12 +10,6 @@
 #include "graphics.h"
 #include "curses.h"
 
-
-// static size_t cursor = 2;    // Starting cursor position
-// static pthread_t cursor_thread;
-// static pthread_mutex_t cursor_mutex = PTHREAD_MUTEX_INITIALIZER;
-// static bool tracking_active = true;
-
 /**
  * Initializes the curses environment
  */
@@ -47,8 +41,6 @@ WINDOW* create_board_window(int start_x, int start_y, const char* title) {
 }
 
 
-
-
 /**
  * Draws the player's board, showing ships and their current state.
  *
@@ -56,22 +48,29 @@ WINDOW* create_board_window(int start_x, int start_y, const char* title) {
  * @param board The player's game board array.
  */
 void draw_player_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]) {
+    //setup colors
     use_default_colors();
     initscr();
     start_color();
+
+    //setup indentation for printing to windows
     int left_margin = 6;
     int top_margin = 2;
     int v_space_between_cells = 2;
-    init_pair(COLOR_GREEN, COLOR_GREEN, -1);
-    init_pair(COLOR_RED, COLOR_RED, -1);
-    init_pair(COLOR_BLUE, COLOR_BLUE, -1);
-    init_pair(COLOR_YELLOW, COLOR_YELLOW, -1);
 
+    //make color pairs
+    init_pair(COLOR_GREEN, COLOR_GREEN, -1);//Numbers & letters for coordinates
+    init_pair(COLOR_RED, COLOR_RED, -1);//Hits
+    init_pair(COLOR_BLUE, COLOR_BLUE, -1);//Misses
+    init_pair(COLOR_YELLOW, COLOR_YELLOW, -1);//Ships
+
+    //loop through each cell and pick its symbol and color
     for (int y = 0; y < NROWS + 1; y++) {
         for (int x = 0; x < NCOLS + 1; x++) {
             wattron(win, COLOR_PAIR(0));
             int color = 0;
             char symbol = '~'; // Default empty cell
+            //Letters
             if(y==0){
                 wattroff(win, COLOR_PAIR(color));
                 wattron(win, COLOR_PAIR(COLOR_GREEN));
@@ -82,28 +81,33 @@ void draw_player_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]) {
                     symbol = 'A'+x-1;
                 }
             }else if (x==0){
+                //Numbers
                 wattroff(win, COLOR_PAIR(color));
                 wattron(win, COLOR_PAIR(COLOR_GREEN));
                 color = COLOR_GREEN;
                 symbol = y+'0';
             } else if (board[x][y].guessed) {
+                //hit
                 if(board[x][y].hit){
                     symbol = 'H';
                     wattroff(win, COLOR_PAIR(color));
                     wattron(win, COLOR_PAIR(COLOR_RED));
                     color=COLOR_RED;
                 }else{
+                    //miss
                     symbol = 'M';
                     wattroff(win, COLOR_PAIR(color));
                     wattron(win, COLOR_PAIR(COLOR_BLUE));
                     color = COLOR_BLUE;
                 }
+            //ship
             } else if (board[x][y].occupied) {
                 symbol = 'S'; // Display ship
                 wattroff(win, COLOR_PAIR(color));
                 wattron(win, COLOR_PAIR(COLOR_YELLOW));
                 color = COLOR_YELLOW;
             }
+            //':' is the character after 9 in ASCII, so this is the special handling for 10
             if (symbol==':') {
                 mvwprintw(win, y + top_margin, x * v_space_between_cells + (left_margin-1), "%d  ", 10);
             } else mvwprintw(win, y + top_margin, x * v_space_between_cells + left_margin, "%c  ", symbol); // Adjust cell spacing
@@ -120,22 +124,30 @@ void draw_player_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]) {
  * @param board The opponent's game board array.
  */
 void draw_opponent_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]) {
+    //setup colors
     use_default_colors();
     initscr();
     start_color();
+
+    //setup indentation for printing to windows
     int left_margin = 6;
     int top_margin = 2;
     int v_space_between_cells = 2;
-    init_pair(COLOR_GREEN, COLOR_GREEN, -1);
-    init_pair(COLOR_RED, COLOR_RED, -1);
-    init_pair(COLOR_BLUE, COLOR_BLUE, -1);
 
+    //make color pairs
+    init_pair(COLOR_GREEN, COLOR_GREEN, -1);//Numbers & letters for coordinates
+    init_pair(COLOR_RED, COLOR_RED, -1);//Hits
+    init_pair(COLOR_BLUE, COLOR_BLUE, -1);//Misses
+
+    //loop through every cell
     for (int y = 0; y < NROWS + 1; y++) {
         for (int x = 0; x < NCOLS + 1; x++) {
             wattron(win, COLOR_PAIR(0));
             int color = 0;
             char symbol = '~'; // Default empty cell
+            //numbers & letters of coordinates
             if(y==0){
+                //letters
                 wattroff(win, COLOR_PAIR(color));
                 wattron(win, COLOR_PAIR(COLOR_GREEN));
                 color = COLOR_GREEN;
@@ -145,23 +157,27 @@ void draw_opponent_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]) {
                     symbol = 'A'+x-1;
                 }
             }else if (x==0){
+                //numbers
                 wattroff(win, COLOR_PAIR(color));
                 wattron(win, COLOR_PAIR(COLOR_GREEN));
                 color = COLOR_GREEN;
                 symbol = y+'0';
             } else if (board[x][y].guessed) {
                 if(board[x][y].hit){
+                    //hit
                     symbol = 'H';
                     wattroff(win, COLOR_PAIR(color));
                     wattron(win, COLOR_PAIR(COLOR_RED));
                     color=COLOR_RED;
                 }else{
+                    //miss
                     symbol = 'M';
                     wattroff(win, COLOR_PAIR(color));
                     wattron(win, COLOR_PAIR(COLOR_BLUE));
                     color = COLOR_BLUE;
                 }
             } 
+            //':' is the character after 9 in ASCII, so this is the special handling for 10
             if (symbol==':') {
                 mvwprintw(win, y + top_margin, x * v_space_between_cells + (left_margin-1), "%d  ", 10);
             } else mvwprintw(win, y + top_margin, x * v_space_between_cells + left_margin, "%c  ", symbol); // Adjust cell spacing
@@ -185,6 +201,14 @@ WINDOW* create_prompt_window(int start_x, int start_y) {
     mvwprintw(win, 0, 2, "[ Prompt ]");
     wrefresh(win);
     return win;
+}
+
+
+/**
+ * End the curses environment
+ */
+void end_curses() {
+    endwin(); // End curses mode
 }
 
 // /**
@@ -251,10 +275,3 @@ WINDOW* create_prompt_window(int start_x, int start_y) {
 //     tracking_active = false;
 //     pthread_join(cursor_thread, NULL);
 // }
-
-/**
- * End the curses environment
- */
-void end_curses() {
-    endwin(); // End curses mode
-}

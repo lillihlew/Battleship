@@ -57,6 +57,11 @@ void draw_opponent_board(WINDOW* win, cell_t board[NROWS + 1][NCOLS + 1]);
  */
 WINDOW* create_prompt_window(int start_x, int start_y);
 
+/**
+ * End the curses environment
+ */
+void end_curses();
+
 // /**
 //  * Displays a prompt message in the given window and clears the input field.
 //  * 
@@ -76,8 +81,3 @@ WINDOW* create_prompt_window(int start_x, int start_y);
 //  * Stop the start_cursor_tracking thread
 //  */
 // void stop_cursor_tracking();
-
-/**
- * End the curses environment
- */
-void end_curses();
