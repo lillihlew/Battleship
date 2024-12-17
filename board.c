@@ -665,40 +665,6 @@ void printStatus(board_t board, WINDOW * window, char* filename){
 }
 
 
-
-
-
-// /**hitOrMiss
-//  * takes an int array containing coordinates and a board, returns "HIT" if 
-//  * the cell specified is occupied and hasn't yet been guessed, "GUESSED" if
-//  * the cell specified has been guessed, and "MISS" if it's unoccupied and 
-//  * unguessed.
-//  * Assumptions: coordinates are valid and order is x,y and board is initialized, and a 10 is sent in as a 0
-//  */
-// char * hitOrMiss(int attackCoordsArray[2], board_t * board){
-//     int x = attackCoordsArray[0];
-//     if(x==0)x=10;
-
-//     int y = attackCoordsArray[1];
-//     if(y==0)y=10;
-
-//     //save specified cell
-//     cell_t cell = board->array[x][y];
-
-//     //if cell has already been guessed
-//     if(cell.guessed) return "GUESSED";
-    
-//     /*at this point, our cell has not been guessed, so return hit if occupied and 
-//     miss otherwise, and update cell status accordingly*/
-//     cell.guessed=true;
-//     if(cell.occupied){
-//         cell.hit = true;
-//         return "HIT";
-//     } else {
-//         return "MISS";
-//     }
-// }
-
 /**
  * Cursor tracking thread to make sure the cursor resets
  *      before if goes out of bounds of the prompt window
