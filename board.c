@@ -784,7 +784,7 @@ static void* victory_tracking(void* arg) {
             free(most_recent_prompt);
             most_recent_prompt = strdup("You lost...Player 1 wins!");
             wrefresh(prompt_win);
-            mvwprintw(prompt_win, cursor++, 1, "Exiting...");
+            mvwprintw(prompt_win, 2, 1, "Exiting...");
             free(most_recent_prompt);
             most_recent_prompt = strdup("Exiting...");
             wrefresh(prompt_win);
@@ -802,7 +802,7 @@ static void* victory_tracking(void* arg) {
             free(most_recent_prompt);
             most_recent_prompt = strdup("You lost...Player 2 wins!");
             wrefresh(prompt_win);
-            mvwprintw(prompt_win, cursor++, 1, "Exiting...");
+            mvwprintw(prompt_win, 2, 1, "Exiting...");
             free(most_recent_prompt);
             most_recent_prompt = strdup("Exiting...");
             wrefresh(prompt_win);

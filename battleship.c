@@ -600,11 +600,10 @@ void welcome_message(WINDOW* prompt_win) {
     mvwprintw(prompt_win, 15, 1, "   NOTE: Players do not get consecutive turns if they hit an enemy ship");
     mvwprintw(prompt_win, 16, 1, "4. A ship is sunk when all its parts are hit.");
     mvwprintw(prompt_win, 17, 1, "5. The game ends when all ships of one player are sunk.");
-    mvwprintw(prompt_win, 19, 1, "Type 'exit' or 'quit' anytime to leave the game.");
-    mvwprintw(prompt_win, 20, 1, "============================================================");
-    mvwprintw(prompt_win, 21, 1, "                 LET THE BATTLE BEGIN!");
-    mvwprintw(prompt_win, 22, 1, "============================================================");
-    mvwprintw(prompt_win, 24, 1, "Press Enter to start the game...");
+    mvwprintw(prompt_win, 19, 1, "============================================================");
+    mvwprintw(prompt_win, 20, 1, "                 LET THE BATTLE BEGIN!");
+    mvwprintw(prompt_win, 21, 1, "============================================================");
+    mvwprintw(prompt_win, 23, 1, "Press Enter to start the game...");
     wrefresh(prompt_win);       // Refresh the window to display changes
     
     // Wait for the player to press Enter
